@@ -1,0 +1,67 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "molds/*/README.md"
+      - "molds/catalog.toml"
+      - "docs-templates/**"
+      - "docs-assets/**"
+      - "scripts/build_docs.py"
+      - "mkdocs.yml"
+  pull_request:
+    paths:
+      - "molds/*/README.md"
+      - "molds/catalog.toml"
+      - "docs-templates/**"
+      - "docs-assets/**"
+      - "scripts/build_docs.py"
+      - "mkdocs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Generate docs from molds
+        run: uvx --with jinja2 python scripts/build_docs.py
+
+      - name: Build site with Zensical
+        run: uvx zensical build
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site/
+          retention-days: 1
+
+  deploy-docs:
+    name: Deploy to GitHub Pages
+    needs: build-docs
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site/
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site/
+          publish_branch: gh-pages
+          commit_message: "docs: deploy ${{ github.sha }}"

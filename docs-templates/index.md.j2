@@ -1,0 +1,87 @@
+<p align="center">
+  <img src="assets/logo-image.jpg" alt="fimod-powered" width="380"/>
+</p>
+
+# :material-package-variant-closed: fimod-powered — *curated mold registry*
+
+> **Production-ready [fimod](https://github.com/pytgaen/fimod) molds — install once, use everywhere.**
+>
+> *No system Python required. One registry, all the transforms you need.*
+
+---
+
+## :rocket: Get started in 30 seconds
+
+```bash
+# 1. Install fimod (see https://pytgaen.github.io/fimod/guides/quick-start/)
+curl -fsSL https://raw.githubusercontent.com/pytgaen/fimod/main/install.sh | sh
+
+# 2. Add the fimod-powered registry
+fimod registry setup  # And accept to install fimod-powered
+```
+
+That's it. You now have access to all molds via `fimod s -m @mold_name`.
+
+[:octicons-arrow-right-24: Full installation guide](getting-started.md)
+
+---
+
+## :star2: Showcase
+{% for item in showcase %}
+
+### {{ item.icon }} {{ item.title }}
+
+{{ item.description }}
+{% for tab in item.tabs %}
+
+=== "{{ tab.label }}"
+
+    ```{{ tab.lang }}
+    {{ tab.content | indent(4) }}
+    ```
+{% endfor %}
+{% if item.footer %}
+
+{{ item.footer }}
+{% endif %}
+
+[:octicons-arrow-right-24: Full documentation](molds/{{ item.name }}.md)
+
+---
+{% endfor %}
+
+<div class="grid cards" markdown>
+
+-   :octicons-book-24:{ .lg .middle } **Getting started**
+
+    ---
+
+    Install fimod, add the registry, and start transforming data.
+
+    [:octicons-arrow-right-24: Installation guide](getting-started.md)
+
+-   :material-puzzle:{ .lg .middle } **Browse all molds**
+
+    ---
+
+    See the full catalogue with input/output formats and arguments.
+
+    [:octicons-arrow-right-24: Mold catalogue](molds/index.md)
+
+-   :octicons-pencil-24:{ .lg .middle } **Authoring a mold**
+
+    ---
+
+    Learn how to write a mold: structure, transform function, directives.
+
+    [:octicons-arrow-right-24: Authoring guide](authoring.md)
+
+-   :octicons-git-pull-request-24:{ .lg .middle } **Contributing**
+
+    ---
+
+    Propose your mold to fimod-powered: workflow, tests, catalog.
+
+    [:octicons-arrow-right-24: Contributing guide](contributing.md)
+
+</div>

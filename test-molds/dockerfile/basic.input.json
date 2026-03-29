@@ -1,0 +1,9 @@
+{
+  "package_manager": "npm",
+  "base_image": "node:20-slim",
+  "system_packages": ["curl"],
+  "copy": [{"src": ".", "dst": "/app"}],
+  "env": {"NODE_ENV": "production"},
+  "expose": [3000],
+  "cmd": ["node", "server.js"]
+}

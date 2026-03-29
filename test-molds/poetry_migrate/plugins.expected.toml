@@ -1,0 +1,20 @@
+[project]
+name = "my_plugin"
+version = "0.1.0"
+description = "Package with plugins"
+dependencies = []
+requires-python = ">=3.9.0,<4.0.0"
+
+[[project.authors]]
+name = "Dev"
+email = "dev@example.com"
+
+[project.scripts]
+mycli = "my_package.cli:main"
+
+[project.entry-points."myapp.plugins"]
+my_plugin = "my_package.plugin:MyPlugin"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

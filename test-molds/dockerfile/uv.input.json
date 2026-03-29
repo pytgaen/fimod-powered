@@ -1,0 +1,6 @@
+{
+  "package_manager": "uv",
+  "expose": [8000],
+  "user": "app",
+  "cmd": ["uvicorn", "main:app", "--host", "0.0.0.0"]
+}

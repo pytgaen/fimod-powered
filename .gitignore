@@ -1,0 +1,34 @@
+# ─── Python (Mold scripts) ────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# ─── Environment Variables ────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.template
+
+# ─── AI / Tools ───────────────────────────────────────────
+.serena/
+.cache/
+.claude/
+
+# ─── IDE & Editors ────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Documentation (generated) ───────────────────────────
+docs/
+site/
+
+# ─── Temporary ────────────────────────────────────────────
+/tmp/
+*.log

@@ -1,0 +1,21 @@
+[project]
+name = "my_package"
+version = "1.0.0"
+description = "Package with extras"
+dependencies = [
+    "boto3[crt]>=1.26.0,<2.0.0",
+    "requests>=2.28.0,<3.0.0",
+]
+requires-python = ">=3.9.0,<4.0.0"
+
+[[project.authors]]
+name = "Dev"
+email = "dev@example.com"
+
+[project.optional-dependencies]
+aws = ["boto3"]
+http = ["requests"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

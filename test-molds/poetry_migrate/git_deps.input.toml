@@ -1,0 +1,10 @@
+[tool.poetry]
+name = "my_package"
+version = "0.1.0"
+description = "Git dependencies"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+my-lib = {git = "https://github.com/org/my-lib.git", branch = "main"}
+my-other = {git = "https://github.com/org/other.git", tag = "v1.0.0"}

@@ -1,0 +1,10 @@
+[tool.poetry]
+name = "my_package"
+version = "0.1.0"
+description = "Path dependencies for uv"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.28"
+my-local-lib = {path = "../my-local-lib", develop = true}

@@ -1,0 +1,164 @@
+{%- if multistage %}
+# ── Build stage ──────────────────────────────────────────────────
+FROM {{ base_image }} AS builder
+
+WORKDIR {{ workdir }}
+{% if package_manager == "uv" %}
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY . .
+
+RUN uv sync --frozen --no-dev
+{% elif package_manager == "poetry" %}
+
+RUN pip install --no-cache-dir poetry
+COPY pyproject.toml poetry.lock* ./
+RUN poetry config virtualenvs.in-project true \
+ && poetry install --only main --no-interaction --no-ansi
+
+COPY . .
+{% elif package_manager == "pip" %}
+
+RUN python -m venv .venv
+ENV PATH="{{ workdir }}/.venv/bin:$PATH"
+COPY requirements*.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+{% elif package_manager == "npm" %}
+
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+{% elif package_manager == "yarn" %}
+
+RUN corepack enable
+COPY package.json yarn.lock* ./
+RUN yarn install --frozen-lockfile --production
+{% elif package_manager == "pnpm" %}
+
+RUN corepack enable
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile --prod
+{% endif %}
+
+# ── Runtime stage ────────────────────────────────────────────────
+FROM {{ base_image }}
+{% else %}
+FROM {{ base_image }}
+{% endif %}
+{% if labels %}
+
+{% for key, value in labels | items %}
+LABEL {{ key }}="{{ value }}"
+{% endfor %}
+{% endif %}
+{% if build_args %}
+
+{% for arg in build_args %}
+ARG {{ arg }}
+{% endfor %}
+{% endif %}
+{% if system_packages %}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+{% for pkg in system_packages %}
+    {{ pkg }}{{ " \\" if not loop.last else "" }}
+{% endfor %}
+ && rm -rf /var/lib/apt/lists/*
+{% endif %}
+{% if user %}
+
+RUN groupadd -r {{ user }} && useradd -r -g {{ user }} -d {{ workdir }} -s /sbin/nologin {{ user }}
+{% endif %}
+
+WORKDIR {{ workdir }}
+{% if multistage %}
+{% if is_python %}
+
+COPY --from=builder {{ workdir }}/.venv {{ workdir }}/.venv
+ENV PATH="{{ workdir }}/.venv/bin:$PATH"
+{% elif is_node %}
+
+COPY --from=builder {{ workdir }}/node_modules {{ workdir }}/node_modules
+{% endif %}
+{% else %}
+{% if package_manager == "uv" %}
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen --no-dev --no-install-project
+{% elif package_manager == "poetry" %}
+
+RUN pip install --no-cache-dir poetry
+COPY pyproject.toml poetry.lock* ./
+RUN poetry config virtualenvs.create false \
+ && poetry install --only main --no-interaction --no-ansi
+{% elif package_manager == "pip" %}
+
+COPY requirements*.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+{% elif package_manager == "npm" %}
+
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+{% elif package_manager == "yarn" %}
+
+RUN corepack enable
+COPY package.json yarn.lock* ./
+RUN yarn install --frozen-lockfile --production
+{% elif package_manager == "pnpm" %}
+
+RUN corepack enable
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile --prod
+{% endif %}
+{% endif %}
+
+{% if user %}
+COPY --chown={{ user }}:{{ user }} . .
+{% else %}
+COPY . .
+{% endif %}
+{% if not multistage and package_manager == "uv" %}
+
+RUN uv sync --frozen --no-dev
+{% endif %}
+{% if env %}
+
+{% for key, value in env | items %}
+ENV {{ key }}={{ value }}
+{% endfor %}
+{% endif %}
+{% if expose %}
+
+{% for port in expose %}
+EXPOSE {{ port }}
+{% endfor %}
+{% endif %}
+{% if user %}
+
+USER {{ user }}
+{% endif %}
+{% if healthcheck %}
+
+HEALTHCHECK \
+{% if healthcheck.interval %}
+    --interval={{ healthcheck.interval }} \
+{% endif %}
+{% if healthcheck.timeout %}
+    --timeout={{ healthcheck.timeout }} \
+{% endif %}
+{% if healthcheck.retries %}
+    --retries={{ healthcheck.retries }} \
+{% endif %}
+    CMD {{ healthcheck.cmd | tojson }}
+{% endif %}
+{% if entrypoint %}
+
+ENTRYPOINT {{ entrypoint | tojson }}
+{% endif %}
+{% if cmd %}
+
+CMD {{ cmd | tojson }}
+{% endif %}

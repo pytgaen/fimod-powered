@@ -1,0 +1,14 @@
+[project]
+name = "my_package"
+version = "0.1.0"
+description = "Test setuptools backend"
+dependencies = ["click>=8.0.0,<9.0.0"]
+requires-python = ">=3.9.0,<4.0.0"
+
+[[project.authors]]
+name = "Dev"
+email = "dev@example.com"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

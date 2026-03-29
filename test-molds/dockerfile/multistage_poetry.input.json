@@ -1,0 +1,6 @@
+{
+  "package_manager": "poetry",
+  "multistage": true,
+  "expose": [8000],
+  "cmd": ["gunicorn", "app:app"]
+}

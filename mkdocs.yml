@@ -1,0 +1,56 @@
+site_name: fimod-powered
+site_description: Production-ready fimod molds for data transformation
+site_url: https://pytgaen.github.io/fimod-powered
+repo_url: https://github.com/pytgaen/fimod-powered
+repo_name: pytgaen/fimod-powered
+
+theme:
+  name: material
+  logo: assets/logo-favicon.jpg
+  favicon: assets/logo-favicon.jpg
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.tabs.link
+    - search.highlight
+    - search.suggest
+    - navigation.footer
+
+plugins:
+  - search
+
+markdown_extensions:
+  - tables
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Molds: molds/index.md
+  - Authoring a mold: authoring.md
+  - Contributing: contributing.md

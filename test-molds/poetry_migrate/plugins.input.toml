@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "my_plugin"
+version = "0.1.0"
+description = "Package with plugins"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.plugins."myapp.plugins"]
+my_plugin = "my_package.plugin:MyPlugin"
+
+[tool.poetry.scripts]
+mycli = "my_package.cli:main"

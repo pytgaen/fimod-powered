@@ -1,0 +1,9 @@
+{
+  "package_manager": "pip",
+  "labels": {
+    "org.opencontainers.image.source": "https://github.com/example/app",
+    "org.opencontainers.image.version": "1.0.0"
+  },
+  "build_args": ["GIT_SHA", "BUILD_DATE"],
+  "cmd": ["python", "main.py"]
+}

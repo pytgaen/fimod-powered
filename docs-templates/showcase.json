@@ -1,0 +1,67 @@
+[
+  {
+    "name": "dockerfile",
+    "icon": ":material-docker:",
+    "title": "Generate a Dockerfile from a descriptor",
+    "description": "Describe your app in JSON, get a production-ready Dockerfile.",
+    "tabs": [
+      {
+        "label": "Input",
+        "lang": "json",
+        "content": "{\n  \"package_manager\": \"npm\",\n  \"base_image\": \"node:20-slim\",\n  \"system_packages\": [\"curl\"],\n  \"copy\": [{\"src\": \".\", \"dst\": \"/app\"}],\n  \"expose\": [3000],\n  \"cmd\": [\"node\", \"server.js\"]\n}"
+      },
+      {
+        "label": "Command",
+        "lang": "bash",
+        "content": "fimod s -i app.json -m @dockerfile -o Dockerfile"
+      },
+      {
+        "label": "Output",
+        "lang": "dockerfile",
+        "content": "FROM node:20-slim\n\nRUN apt-get update && apt-get install -y --no-install-recommends \\\n    curl\n && rm -rf /var/lib/apt/lists/*\n\nWORKDIR /app\n\nCOPY package.json package-lock.json* ./\nRUN npm ci --omit=dev\n\nCOPY . .\n\nENV NODE_ENV=production\n\nEXPOSE 3000\n\nCMD [\"node\",\"server.js\"]"
+      }
+    ]
+  },
+  {
+    "name": "poetry_migrate",
+    "icon": ":material-swap-horizontal:",
+    "title": "Migrate Poetry to uv",
+    "description": "Convert your `pyproject.toml` from Poetry to uv in one command.",
+    "tabs": [
+      {
+        "label": "Command",
+        "lang": "bash",
+        "content": "fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv"
+      },
+      {
+        "label": "Before",
+        "lang": "toml",
+        "content": "[tool.poetry]\nname = \"my_package\"\nversion = \"0.1.0\"\ndescription = \"A test package\"\nauthors = [\"Test User <test@example.com>\"]\n\n[tool.poetry.dependencies]\npython = \"^3.9\"\nrequests = \"^2.28\""
+      },
+      {
+        "label": "After",
+        "lang": "toml",
+        "content": "[project]\nname = \"my_package\"\nversion = \"0.1.0\"\ndescription = \"A test package\"\nauthors = [{ name = \"Test User\", email = \"test@example.com\" }]\nrequires-python = \">=3.9\"\ndependencies = [\"requests>=2.28,<3\"]"
+      }
+    ]
+  },
+  {
+    "name": "gh_latest",
+    "icon": ":material-tag-arrow-down:",
+    "title": "Get the latest GitHub release",
+    "description": "Grab the latest release tag from any GitHub repo — no API token needed.",
+    "footer": "Pipe it into your scripts, CI, or Dockerfiles. Pair it with `@download` to fetch the asset directly.",
+    "tabs": [
+      {
+        "label": "Command",
+        "lang": "bash",
+        "content": "fimod s -i https://github.com/astral-sh/uv -m @gh_latest"
+      },
+      {
+        "label": "Output",
+        "lang": "text",
+        "content": "v0.6.14"
+      }
+    ]
+  }
+]

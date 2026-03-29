@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-molds:
+    name: Test molds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install fimod
+        run: curl -fsSL https://raw.githubusercontent.com/pytgaen/fimod/main/install.sh | sh
+        env:
+          FIMOD_SETUP_REGISTRY: "no"
+
+      - name: Run fixture tests
+        run: |
+          for mold in molds/*/; do
+            name=$(basename "$mold")
+            test_dir="test-molds/${name}"
+            [ -d "$test_dir" ] && ls "$test_dir"/*.input.* &>/dev/null \
+              && fimod mold test "$mold/${name}.py" "$test_dir"
+          done
+
+  test-e2e:
+    name: E2E tests (HTTP molds)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install fimod
+        run: curl -fsSL https://raw.githubusercontent.com/pytgaen/fimod/main/install.sh | sh
+        env:
+          FIMOD_SETUP_REGISTRY: "no"
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Run e2e tests
+        run: |
+          for script in test-molds/*/test_e2e.sh; do
+            echo "--- Running $script ---"
+            bash "$script"
+          done
+
+  catalog-check:
+    name: Catalog up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install fimod
+        run: curl -fsSL https://raw.githubusercontent.com/pytgaen/fimod/main/install.sh | sh
+        env:
+          FIMOD_SETUP_REGISTRY: "no"
+
+      - name: Rebuild catalog
+        run: fimod registry build-catalog ./molds
+
+      - name: Check catalog is up-to-date
+        run: |
+          if ! git diff --exit-code molds/catalog.toml; then
+            echo "::error::molds/catalog.toml is out of date. Run 'fimod registry build-catalog ./molds' and commit the result."
+            exit 1
+          fi
+
+  pre-commit:
+    name: Pre-commit checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: j178/prek-action@v1

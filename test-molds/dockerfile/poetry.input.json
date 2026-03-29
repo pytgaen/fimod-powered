@@ -1,0 +1,11 @@
+{
+  "package_manager": "poetry",
+  "system_packages": ["curl"],
+  "expose": [8000],
+  "healthcheck": {
+    "cmd": ["curl", "-f", "http://localhost:8000/health"],
+    "interval": "30s",
+    "timeout": "5s"
+  },
+  "cmd": ["gunicorn", "app:app"]
+}

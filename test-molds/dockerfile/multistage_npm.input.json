@@ -1,0 +1,7 @@
+{
+  "package_manager": "npm",
+  "multistage": true,
+  "env": {"NODE_ENV": "production"},
+  "expose": [3000],
+  "cmd": ["node", "server.js"]
+}

@@ -1,0 +1,6 @@
+{
+  "package_manager": "pnpm",
+  "user": "node",
+  "expose": [3000],
+  "cmd": ["node", "index.js"]
+}

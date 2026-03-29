@@ -1,0 +1,7 @@
+{
+  "package_manager": "uv",
+  "multistage": true,
+  "user": "app",
+  "expose": [8000],
+  "cmd": ["uvicorn", "main:app", "--host", "0.0.0.0"]
+}

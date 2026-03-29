@@ -1,0 +1,38 @@
+[
+  {
+    "description": "Unused function: parse_config",
+    "check_name": "unused-function",
+    "fingerprint": "0b349b331929c9a58706b52361fba5d1",
+    "severity": "info",
+    "location": {
+      "path": "src/utils.py",
+      "lines": {
+        "begin": 12
+      }
+    }
+  },
+  {
+    "description": "Unused import: os",
+    "check_name": "unused-import",
+    "fingerprint": "ea155e94ed779f5b809fa84ae5ecf860",
+    "severity": "info",
+    "location": {
+      "path": "src/config.py",
+      "lines": {
+        "begin": 3
+      }
+    }
+  },
+  {
+    "description": "Unused class: LegacyParser",
+    "check_name": "unused-class",
+    "fingerprint": "726750b12a2af5b269a61086321f87f9",
+    "severity": "info",
+    "location": {
+      "path": "src/parsers.py",
+      "lines": {
+        "begin": 22
+      }
+    }
+  }
+]

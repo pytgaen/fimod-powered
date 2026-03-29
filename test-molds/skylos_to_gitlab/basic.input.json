@@ -1,0 +1,46 @@
+{
+  "definitions": {
+    "src.utils.parse_config": {
+      "name": "src.utils.parse_config",
+      "file": "src/utils.py",
+      "line": 12,
+      "type": "function"
+    }
+  },
+  "unused_functions": [
+    {
+      "name": "parse_config",
+      "full_name": "src.utils.parse_config",
+      "simple_name": "parse_config",
+      "type": "function",
+      "file": "src/utils.py",
+      "basename": "utils.py",
+      "line": 12,
+      "confidence": 100,
+      "references": 0,
+      "calls": []
+    }
+  ],
+  "unused_imports": [
+    {
+      "name": "os",
+      "file": "src/config.py",
+      "line": 3
+    }
+  ],
+  "unused_classes": [
+    {
+      "name": "LegacyParser",
+      "file": "src/parsers.py",
+      "line": 22
+    }
+  ],
+  "unused_variables": [],
+  "unused_parameters": [],
+  "unused_files": [],
+  "whitelisted": [],
+  "analysis_summary": {
+    "total_files": 5,
+    "excluded_folders": ["build", "__pycache__", ".venv"]
+  }
+}

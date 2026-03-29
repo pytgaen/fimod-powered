@@ -1,0 +1,24 @@
+version: "3"
+
+tasks:
+  docs:generate:
+    desc: Generate documentation from catalog.toml and mold READMEs
+    cmds:
+      - python3 scripts/build_docs.py
+
+  docs:serve:
+    desc: Generate docs and serve locally with live reload
+    deps: [docs:generate]
+    cmds:
+      - uvx zensical serve
+
+  docs:build:
+    desc: Generate docs and build static site
+    deps: [docs:generate]
+    cmds:
+      - uvx zensical build
+
+  docs:clean:
+    desc: Remove generated docs and site directories
+    cmds:
+      - rm -rf docs/ site/

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report</title>
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f8f9fa; --fg: #1a1a2e;
+    --border: #dee2e6; --accent: #4361ee; --accent-light: #eef1ff;
+    --success: #2d6a4f; --muted: #6c757d; --shadow: rgba(0,0,0,0.06);
+  }
+  [data-theme="dark"] {
+    --bg: #1a1a2e; --bg2: #16213e; --fg: #e0e0e0;
+    --border: #2a2a4a; --accent: #7b8cde; --accent-light: #1e2240;
+    --success: #52b788; --muted: #8d99ae; --shadow: rgba(0,0,0,0.3);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.6; padding: 2rem; max-width: 1400px; margin: 0 auto;
+  }
+  header { margin-bottom: 2rem; }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .description { color: var(--muted); margin-bottom: 0.5rem; }
+  .meta {
+    display: flex; gap: 1.5rem; color: var(--muted); font-size: 0.85rem;
+    padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+  }
+  .meta span { display: flex; align-items: center; gap: 0.35rem; }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto; border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 1px 3px var(--shadow);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  thead { background: var(--bg2); position: sticky; top: 0; }
+  th {
+    padding: 0.75rem 1rem; text-align: left; font-weight: 600;
+    border-bottom: 2px solid var(--border); white-space: nowrap;
+    cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--accent); }
+  th .sort-arrow { font-size: 0.7rem; margin-left: 0.3rem; opacity: 0.4; }
+  th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+  td {
+    padding: 0.6rem 1rem; border-bottom: 1px solid var(--border);
+    max-width: 400px; overflow: hidden; text-overflow: ellipsis;
+  }
+  tr:hover { background: var(--accent-light); }
+  td.number { text-align: right; font-variant-numeric: tabular-nums; }
+  td.null { color: var(--muted); font-style: italic; }
+  td.nested { font-family: "SF Mono", Consolas, monospace; font-size: 0.8rem; color: var(--muted); }
+
+  /* Key-value card */
+  .card {
+    border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 1px 3px var(--shadow); overflow: hidden;
+  }
+  .kv-row {
+    display: flex; border-bottom: 1px solid var(--border);
+  }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-key {
+    flex: 0 0 220px; padding: 0.6rem 1rem; background: var(--bg2);
+    font-weight: 600; font-size: 0.85rem;
+  }
+  .kv-val { flex: 1; padding: 0.6rem 1rem; font-size: 0.9rem; word-break: break-word; }
+
+  /* List */
+  .list-item {
+    padding: 0.5rem 1rem; border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .list-item:last-child { border-bottom: none; }
+
+  /* Scalar */
+  .scalar {
+    font-size: 1.5rem; padding: 2rem; text-align: center;
+    background: var(--bg2); border-radius: 8px;
+  }
+
+  /* Search */
+  .toolbar { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
+  .search-box {
+    padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 0.85rem; background: var(--bg); color: var(--fg); width: 260px;
+  }
+  .search-box:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  .count { font-size: 0.85rem; color: var(--muted); }
+
+  footer {
+    margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);
+    font-size: 0.8rem; color: var(--muted); text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Report</h1>
+  <div class="meta">
+    <span>2 rows</span>
+    <span>2 columns</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <input type="text" class="search-box" placeholder="Filter rows…" id="search" autocomplete="off">
+  <span class="count" id="count">2 rows</span>
+</div>
+<div class="table-wrap">
+  <table id="data-table">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">name<span class="sort-arrow">▲</span></th>
+        <th onclick="sortTable(1)">score<span class="sort-arrow">▲</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Alice</td>
+        <td class="number">92</td>
+      </tr>
+      <tr>
+        <td>Bob</td>
+        <td class="number">87</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<footer>
+  Generated with <a href="https://github.com/pytgaen/fimod">fimod</a>
+</footer>
+
+<script>
+const table = document.getElementById("data-table");
+const search = document.getElementById("search");
+const countEl = document.getElementById("count");
+const rows = Array.from(table.tBodies[0].rows);
+let sortCol = -1, sortAsc = true;
+
+search.addEventListener("input", () => {
+  const q = search.value.toLowerCase();
+  let visible = 0;
+  rows.forEach(row => {
+    const match = !q || row.textContent.toLowerCase().includes(q);
+    row.style.display = match ? "" : "none";
+    if (match) visible++;
+  });
+  countEl.textContent = visible + " / " + rows.length + " rows";
+});
+
+function sortTable(col) {
+  if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll("th").forEach((th, i) => {
+    th.classList.toggle("sorted", i === col);
+    th.querySelector(".sort-arrow").textContent = i === col ? (sortAsc ? "▲" : "▼") : "▲";
+  });
+  rows.sort((a, b) => {
+    let va = a.cells[col].textContent.trim();
+    let vb = b.cells[col].textContent.trim();
+    const na = parseFloat(va), nb = parseFloat(vb);
+    if (!isNaN(na) && !isNaN(nb)) return sortAsc ? na - nb : nb - na;
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  const tbody = table.tBodies[0];
+  rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+
+</body>
+</html>

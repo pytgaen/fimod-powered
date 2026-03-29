@@ -1,0 +1,5 @@
+{
+  "package_manager": "pip",
+  "expose": [5000],
+  "cmd": ["python", "app.py"]
+}

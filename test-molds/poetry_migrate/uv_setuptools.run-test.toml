@@ -1,0 +1,3 @@
+[args]
+target = "uv"
+build = "setuptools"
