@@ -375,10 +375,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#from-github-recommended" class="md-nav__link">
+  <a href="#via-fimod-registry-setup-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From GitHub (recommended)
+        Via fimod registry setup (recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From GitHub
       
     </span>
   </a>
@@ -665,10 +676,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#from-github-recommended" class="md-nav__link">
+  <a href="#via-fimod-registry-setup-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From GitHub (recommended)
+        Via fimod registry setup (recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From GitHub
       
     </span>
   </a>
@@ -800,12 +822,16 @@
 <h3 id="other-methods">Other methods</h3>
 <p>See the <a href="https://pytgaen.github.io/fimod/guides/quick-start/">fimod Quick Start guide</a> for all installation options.</p>
 <h2 id="add-the-fimod-powered-registry">Add the fimod-powered registry</h2>
-<h3 id="from-github-recommended">From GitHub (recommended)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>fimod<span class="w"> </span>registry<span class="w"> </span>add<span class="w"> </span>fimod-powered<span class="w"> </span>https://github.com/pytgaen/fimod-powered
+<h3 id="via-fimod-registry-setup-recommended">Via <code>fimod registry setup</code> (recommended)</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>fimod<span class="w"> </span>registry<span class="w"> </span>setup
+</code></pre></div>
+<p>The interactive setup will propose to install <strong>fimod-powered</strong>. Accept, and you're done.</p>
+<h3 id="from-github">From GitHub</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>fimod<span class="w"> </span>registry<span class="w"> </span>add<span class="w"> </span>fimod-powered<span class="w"> </span>https://github.com/pytgaen/fimod-powered/tree/main/molds
 </code></pre></div>
 <h3 id="from-a-local-clone">From a local clone</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/pytgaen/fimod-powered.git
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>fimod<span class="w"> </span>registry<span class="w"> </span>add<span class="w"> </span>fimod-powered<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/fimod-powered/molds&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/pytgaen/fimod-powered.git
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>fimod<span class="w"> </span>registry<span class="w"> </span>add<span class="w"> </span>fimod-powered<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/fimod-powered/molds&quot;</span>
 </code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -813,32 +839,32 @@
 </div>
 <h2 id="set-the-priority">Set the priority</h2>
 <p>Give <code>fimod-powered</code> the highest priority so its molds are resolved first:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>fimod<span class="w"> </span>registry<span class="w"> </span>set-priority<span class="w"> </span>fimod-powered<span class="w"> </span><span class="m">1</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>fimod<span class="w"> </span>registry<span class="w"> </span>set-priority<span class="w"> </span>fimod-powered<span class="w"> </span><span class="m">10</span>
 </code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>When multiple registries are configured, fimod resolves short names (e.g. <code>@dockerfile</code>) from the highest-priority registry first. Setting priority 1 ensures fimod-powered wins, so you can write <code>@dockerfile</code> instead of <code>@fimod-powered/dockerfile</code>.</p>
 </div>
 <h2 id="use-a-mold">Use a mold</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Generate a Dockerfile from a descriptor</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>app.json<span class="w"> </span>-m<span class="w"> </span>@dockerfile<span class="w"> </span>-o<span class="w"> </span>Dockerfile
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Pass arguments</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>pyproject.toml<span class="w"> </span>-m<span class="w"> </span>@poetry_migrate<span class="w"> </span>--arg<span class="w"> </span><span class="nv">target</span><span class="o">=</span>uv
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Preview the output (stdout)</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>data.csv<span class="w"> </span>-m<span class="w"> </span>@html_report
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Generate a Dockerfile from a descriptor</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>app.json<span class="w"> </span>-m<span class="w"> </span>@dockerfile<span class="w"> </span>-o<span class="w"> </span>Dockerfile
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Pass arguments</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>pyproject.toml<span class="w"> </span>-m<span class="w"> </span>@poetry_migrate<span class="w"> </span>--arg<span class="w"> </span><span class="nv">target</span><span class="o">=</span>uv
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Preview the output (stdout)</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>data.csv<span class="w"> </span>-m<span class="w"> </span>@html_report
 </code></pre></div>
 <h2 id="list-available-molds">List available molds</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>fimod<span class="w"> </span>mold<span class="w"> </span>list<span class="w"> </span>fimod-powered
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>fimod<span class="w"> </span>mold<span class="w"> </span>list<span class="w"> </span>fimod-powered
 </code></pre></div>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <h3 id="mold-not-found">Mold not found</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Error: mold &quot;dockerfile&quot; not found in any registry
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Error: mold &quot;dockerfile&quot; not found in any registry
 </code></pre></div>
 <p>Check that the registry is properly added and has the highest priority:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>fimod<span class="w"> </span>registry<span class="w"> </span>list
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>fimod<span class="w"> </span>registry<span class="w"> </span>set-priority<span class="w"> </span>fimod-powered<span class="w"> </span><span class="m">1</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>fimod<span class="w"> </span>registry<span class="w"> </span>list
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>fimod<span class="w"> </span>registry<span class="w"> </span>set-priority<span class="w"> </span>fimod-powered<span class="w"> </span><span class="m">1</span>
 </code></pre></div>
 <p>If you used a local clone, make sure the path is absolute (see <a href="#from-a-local-clone">From a local clone</a> above).</p>
 <h3 id="unknown-mold-name">Unknown mold name</h3>
