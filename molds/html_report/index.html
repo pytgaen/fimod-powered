@@ -550,6 +550,36 @@
 <p>Generate a standalone HTML report from JSON/CSV data</p>
 </blockquote>
 <p><strong>Output:</strong> <code>Text</code></p>
+<table>
+<thead>
+<tr>
+<th>Arg</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>description</code></td>
+<td>Subtitle text below the title</td>
+</tr>
+<tr>
+<td><code>null-display</code></td>
+<td>Display for null/missing values: "null"</td>
+</tr>
+<tr>
+<td><code>theme</code></td>
+<td>Theme: "light" or "dark" (default: "light")</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>Generation timestamp shown in footer (e.g. "2024-01-15 10:30")</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>Report title (default: "Report")</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <p>Generate a standalone HTML report from any JSON or CSV data. Zero dependencies — a single <code>.html</code> file you can open in any browser, share by email, or embed in CI artifacts.</p>
 <h2 id="why-this-mold">Why This Mold?</h2>
@@ -593,7 +623,17 @@
 <tr>
 <td><code>theme</code></td>
 <td><code>light</code></td>
-<td><code>light</code> or <code>dark</code></td>
+<td><code>light</code> or <code>dark</code> (warns and falls back to <code>light</code> if unknown)</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td><em>(empty)</em></td>
+<td>Generation timestamp shown in footer (e.g. <code>--arg timestamp="$(date +%F)"</code>)</td>
+</tr>
+<tr>
+<td><code>null-display</code></td>
+<td><code>null</code></td>
+<td>Display for null/missing values: <code>null</code>, <code>empty</code>, <code>dash</code>, or custom text</td>
 </tr>
 </tbody>
 </table>

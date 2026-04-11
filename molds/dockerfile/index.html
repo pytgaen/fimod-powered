@@ -423,6 +423,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#extra-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extra instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#converting-an-existing-dockerfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Converting an existing Dockerfile
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layer-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -430,6 +452,45 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Install methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uv-uv_install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        uv (uv_install)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poetry-poetry_install" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Poetry (poetry_install)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -611,7 +672,7 @@
 <td><code>healthcheck</code></td>
 <td>object</td>
 <td>—</td>
-<td><code>cmd</code>, <code>interval</code>, <code>timeout</code>, <code>retries</code></td>
+<td><code>cmd</code>, <code>interval</code>, <code>timeout</code>, <code>start_period</code>, <code>retries</code></td>
 </tr>
 <tr>
 <td><code>entrypoint</code></td>
@@ -625,138 +686,250 @@
 <td>—</td>
 <td>Docker CMD</td>
 </tr>
+<tr>
+<td><code>uv_version</code></td>
+<td>string</td>
+<td><code>latest</code></td>
+<td>uv version tag (e.g. <code>0.7.2</code>)</td>
+</tr>
+<tr>
+<td><code>uv_install</code></td>
+<td>string</td>
+<td><code>copy</code></td>
+<td>uv install method: <code>copy</code>, <code>curl</code>, <code>pip</code></td>
+</tr>
+<tr>
+<td><code>poetry_version</code></td>
+<td>string</td>
+<td>—</td>
+<td>Poetry version to pin</td>
+</tr>
+<tr>
+<td><code>poetry_install</code></td>
+<td>string</td>
+<td><code>curl</code></td>
+<td>Poetry install method: <code>curl</code>, <code>pipx</code>, <code>pip</code></td>
+</tr>
+<tr>
+<td><code>pipefail</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Add <code>SHELL ["/bin/bash", "-o", "pipefail", "-c"]</code></td>
+</tr>
+<tr>
+<td><code>extra_instructions</code></td>
+<td>object</td>
+<td>—</td>
+<td>Custom instructions at hook points (see below)</td>
+</tr>
 </tbody>
 </table>
+<h2 id="extra-instructions">Extra instructions</h2>
+<p>For anything the mold doesn't handle natively, inject raw Dockerfile instructions at specific hook points:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">extra_instructions</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">after_system</span><span class="p">:</span><span class="w">     </span><span class="c1"># after apt-get install, before user creation</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;COPY</span><span class="nv"> </span><span class="s">certs/</span><span class="nv"> </span><span class="s">/usr/local/share/ca-certificates/&quot;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">update-ca-certificates&quot;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">after_install</span><span class="p">:</span><span class="w">    </span><span class="c1"># after dependency install, before COPY . .</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">python</span><span class="nv"> </span><span class="s">-m</span><span class="nv"> </span><span class="s">spacy</span><span class="nv"> </span><span class="s">download</span><span class="nv"> </span><span class="s">fr_core_news_sm&quot;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">after_copy</span><span class="p">:</span><span class="w">       </span><span class="c1"># after COPY . ., before EXPOSE/CMD</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">python</span><span class="nv"> </span><span class="s">manage.py</span><span class="nv"> </span><span class="s">collectstatic</span><span class="nv"> </span><span class="s">--noinput&quot;</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;VOLUME</span><span class="nv"> </span><span class="s">/app/data&quot;</span>
+</code></pre></div>
+<h2 id="converting-an-existing-dockerfile">Converting an existing Dockerfile</h2>
+<p>Use <code>CONVERT_PROMPT.md</code> with any LLM to convert an existing Dockerfile into a fimod descriptor:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cat molds/dockerfile/CONVERT_PROMPT.md my-existing/Dockerfile | llm &quot;convert this Dockerfile&quot;
+</code></pre></div>
+<p>The prompt guides the LLM to map standard Dockerfile patterns to descriptor fields, and route custom instructions into the appropriate <code>extra_instructions</code> hooks.</p>
 <h2 id="layer-caching">Layer caching</h2>
 <p>The template is optimized for Docker layer caching: dependency manifest files are copied and installed <strong>before</strong> the source code. This means <code>docker build</code> only re-installs dependencies when <code>requirements.txt</code>, <code>pyproject.toml</code>, <code>package.json</code>, etc. actually change.</p>
 <p>With <code>multistage: true</code>, the builder stage installs everything, then only the virtualenv (<code>.venv</code>) or <code>node_modules</code> is copied into the final image — no build tools, no cache, no package manager in production.</p>
+<h2 id="install-methods">Install methods</h2>
+<h3 id="uv-uv_install">uv (<code>uv_install</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Method</th>
+<th style="text-align: center;">Kaniko-compatible</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>copy</code> (default)</td>
+<td><code>COPY --from=ghcr.io/astral-sh/uv:TAG</code></td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td><code>curl</code></td>
+<td><code>curl -LsSf https://astral.sh/uv/install.sh \| sh</code></td>
+<td style="text-align: center;">yes</td>
+</tr>
+<tr>
+<td><code>pip</code></td>
+<td><code>pip install uv</code></td>
+<td style="text-align: center;">yes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="poetry-poetry_install">Poetry (<code>poetry_install</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Method</th>
+<th style="text-align: center;">Needs curl</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>curl</code> (default)</td>
+<td><code>curl -sSL https://install.python-poetry.org \| python -</code></td>
+<td style="text-align: center;">yes</td>
+</tr>
+<tr>
+<td><code>pipx</code></td>
+<td><code>pip install pipx &amp;&amp; pipx install poetry</code></td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td><code>pip</code></td>
+<td><code>pip install poetry</code></td>
+<td style="text-align: center;">no</td>
+</tr>
+</tbody>
+</table>
+<p>Both support version pinning via <code>uv_version</code> / <code>poetry_version</code>.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="python-uv">Python + uv</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">8000</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;uvicorn&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;main:app&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--host&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;0.0.0.0&quot;</span><span class="p p-Indicator">]</span>
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">RUN</span><span class="w"> </span>groupadd<span class="w"> </span>-r<span class="w"> </span>app<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>useradd<span class="w"> </span>-r<span class="w"> </span>-g<span class="w"> </span>app<span class="w"> </span>-d<span class="w"> </span>/app<span class="w"> </span>-s<span class="w"> </span>/sbin/nologin<span class="w"> </span>app
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>ghcr.io/astral-sh/uv:latest<span class="w"> </span>/uv<span class="w"> </span>/uvx<span class="w"> </span>/usr/local/bin/
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>uv.lock*<span class="w"> </span>./
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev<span class="w"> </span>--no-install-project
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>.
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">8000</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="k">USER</span><span class="w"> </span><span class="s">app</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uvicorn&quot;</span><span class="p">,</span><span class="s2">&quot;main:app&quot;</span><span class="p">,</span><span class="s2">&quot;--host&quot;</span><span class="p">,</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">]</span>
-</code></pre></div>
-<h3 id="python-poetry-healthcheck">Python + poetry + healthcheck</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">poetry</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">system_packages</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">curl</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">8000</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nt">healthcheck</span><span class="p">:</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:8000/health&quot;</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;gunicorn&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;app:app&quot;</span><span class="p p-Indicator">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">8000</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;uvicorn&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;main:app&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--host&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;0.0.0.0&quot;</span><span class="p p-Indicator">]</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--no-install-recommends<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span>curl
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">RUN</span><span class="w"> </span>groupadd<span class="w"> </span>-r<span class="w"> </span>app<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>useradd<span class="w"> </span>-r<span class="w"> </span>-g<span class="w"> </span>app<span class="w"> </span>-d<span class="w"> </span>/app<span class="w"> </span>-s<span class="w"> </span>/sbin/nologin<span class="w"> </span>app
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--no-cache-dir<span class="w"> </span>poetry
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>poetry.lock*<span class="w"> </span>./
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">RUN</span><span class="w"> </span>poetry<span class="w"> </span>config<span class="w"> </span>virtualenvs.create<span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>poetry<span class="w"> </span>install<span class="w"> </span>--only<span class="w"> </span>main<span class="w"> </span>--no-interaction<span class="w"> </span>--no-ansi
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>.
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">8000</span>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="k">HEALTHCHECK</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">    </span>--interval<span class="o">=</span>30s<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">    </span>--timeout<span class="o">=</span>5s<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">    </span><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;curl&quot;</span><span class="p">,</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span><span class="s2">&quot;http://localhost:8000/health&quot;</span><span class="p">]</span>
-<a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gunicorn&quot;</span><span class="p">,</span><span class="s2">&quot;app:app&quot;</span><span class="p">]</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>ghcr.io/astral-sh/uv:latest<span class="w"> </span>/uv<span class="w"> </span>/uvx<span class="w"> </span>/usr/local/bin/
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>uv.lock*<span class="w"> </span>./
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev<span class="w"> </span>--no-install-project
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="k">COPY</span><span class="w"> </span>--chown<span class="o">=</span>app:app<span class="w"> </span>.<span class="w"> </span>.
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">8000</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="k">USER</span><span class="w"> </span><span class="s">app</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uvicorn&quot;</span><span class="p">,</span><span class="s2">&quot;main:app&quot;</span><span class="p">,</span><span class="s2">&quot;--host&quot;</span><span class="p">,</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">]</span>
+</code></pre></div>
+<h3 id="python-poetry-healthcheck">Python + poetry + healthcheck</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">poetry</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">system_packages</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">curl</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">8000</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">healthcheck</span><span class="p">:</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;curl&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-f&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;http://localhost:8000/health&quot;</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="nt">start_period</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10s</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;gunicorn&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;app:app&quot;</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--no-install-recommends<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span>curl
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="k">RUN</span><span class="w"> </span>curl<span class="w"> </span>-sSL<span class="w"> </span>https://install.python-poetry.org<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/root/.local/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>poetry.lock*<span class="w"> </span>./
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="k">RUN</span><span class="w"> </span>poetry<span class="w"> </span>config<span class="w"> </span>virtualenvs.create<span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>poetry<span class="w"> </span>install<span class="w"> </span>--only<span class="w"> </span>main<span class="w"> </span>--no-interaction<span class="w"> </span>--no-ansi
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>.
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">8000</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="k">HEALTHCHECK</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span>--interval<span class="o">=</span>30s<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">    </span>--timeout<span class="o">=</span>5s<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">    </span>--start-period<span class="o">=</span>10s<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="w">    </span>CMD<span class="w"> </span><span class="o">[</span><span class="s2">&quot;curl&quot;</span>,<span class="s2">&quot;-f&quot;</span>,<span class="s2">&quot;http://localhost:8000/health&quot;</span><span class="o">]</span>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;gunicorn&quot;</span><span class="p">,</span><span class="s2">&quot;app:app&quot;</span><span class="p">]</span>
 </code></pre></div>
 <h3 id="nodejs-pnpm">Node.js + pnpm</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pnpm</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3000</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">node</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;node&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;index.js&quot;</span><span class="p p-Indicator">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pnpm</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3000</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">node</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;node&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;index.js&quot;</span><span class="p p-Indicator">]</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">node:22-slim</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">RUN</span><span class="w"> </span>groupadd<span class="w"> </span>-r<span class="w"> </span>node<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>useradd<span class="w"> </span>-r<span class="w"> </span>-g<span class="w"> </span>node<span class="w"> </span>-d<span class="w"> </span>/app<span class="w"> </span>-s<span class="w"> </span>/sbin/nologin<span class="w"> </span>node
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="k">RUN</span><span class="w"> </span>corepack<span class="w"> </span>enable
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="k">COPY</span><span class="w"> </span>package.json<span class="w"> </span>pnpm-lock.yaml*<span class="w"> </span>./
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="k">RUN</span><span class="w"> </span>pnpm<span class="w"> </span>install<span class="w"> </span>--frozen-lockfile<span class="w"> </span>--prod
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="k">COPY</span><span class="w"> </span>--chown<span class="o">=</span>node:node<span class="w"> </span>.<span class="w"> </span>.
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">3000</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="k">USER</span><span class="w"> </span><span class="s">node</span>
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;node&quot;</span><span class="p">,</span><span class="s2">&quot;index.js&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">node:22-slim</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">RUN</span><span class="w"> </span>groupadd<span class="w"> </span>-r<span class="w"> </span>node<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>useradd<span class="w"> </span>-r<span class="w"> </span>-g<span class="w"> </span>node<span class="w"> </span>-d<span class="w"> </span>/app<span class="w"> </span>-s<span class="w"> </span>/sbin/nologin<span class="w"> </span>node
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="k">RUN</span><span class="w"> </span>corepack<span class="w"> </span>enable
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="k">COPY</span><span class="w"> </span>package.json<span class="w"> </span>pnpm-lock.yaml*<span class="w"> </span>./
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="k">RUN</span><span class="w"> </span>pnpm<span class="w"> </span>install<span class="w"> </span>--frozen-lockfile<span class="w"> </span>--prod
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="k">COPY</span><span class="w"> </span>--chown<span class="o">=</span>node:node<span class="w"> </span>.<span class="w"> </span>.
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">3000</span>
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="k">USER</span><span class="w"> </span><span class="s">node</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>
+<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;node&quot;</span><span class="p">,</span><span class="s2">&quot;index.js&quot;</span><span class="p">]</span>
 </code></pre></div>
 <h3 id="multistage-build-python-uv">Multistage build (Python + uv)</h3>
 <p>Set <code>multistage: true</code> for a two-stage build: dependencies are installed in a builder stage, then only the virtualenv (Python) or <code>node_modules</code> (Node.js) is copied into the final image. This produces a smaller, cleaner runtime image.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nt">multistage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">8000</span><span class="p p-Indicator">]</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;uvicorn&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;main:app&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--host&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;0.0.0.0&quot;</span><span class="p p-Indicator">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">package_manager</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">uv</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">multistage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nt">expose</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">8000</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nt">cmd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;uvicorn&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;main:app&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;--host&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;0.0.0.0&quot;</span><span class="p p-Indicator">]</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c"># ── Build stage ──────────────────────────────────────────────────</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s">builder</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>ghcr.io/astral-sh/uv:latest<span class="w"> </span>/uv<span class="w"> </span>/uvx<span class="w"> </span>/usr/local/bin/
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>uv.lock*<span class="w"> </span>./
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev<span class="w"> </span>--no-install-project
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>.
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev
-<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>
-<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="c"># ── Runtime stage ────────────────────────────────────────────────</span>
-<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span>
-<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>
-<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="k">RUN</span><span class="w"> </span>groupadd<span class="w"> </span>-r<span class="w"> </span>app<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>useradd<span class="w"> </span>-r<span class="w"> </span>-g<span class="w"> </span>app<span class="w"> </span>-d<span class="w"> </span>/app<span class="w"> </span>-s<span class="w"> </span>/sbin/nologin<span class="w"> </span>app
-<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
-<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
-<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>
-<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>builder<span class="w"> </span>/app/.venv<span class="w"> </span>/app/.venv
-<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/app/.venv/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
-<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>
-<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="k">COPY</span><span class="w"> </span>--chown<span class="o">=</span>app:app<span class="w"> </span>.<span class="w"> </span>.
-<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>
-<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">8000</span>
-<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>
-<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="k">USER</span><span class="w"> </span><span class="s">app</span>
-<a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>
-<a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uvicorn&quot;</span><span class="p">,</span><span class="s2">&quot;main:app&quot;</span><span class="p">,</span><span class="s2">&quot;--host&quot;</span><span class="p">,</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c"># ── Build stage ──────────────────────────────────────────────────</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="s">builder</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>ghcr.io/astral-sh/uv:latest<span class="w"> </span>/uv<span class="w"> </span>/uvx<span class="w"> </span>/usr/local/bin/
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>uv.lock*<span class="w"> </span>./
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev<span class="w"> </span>--no-install-project
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="k">COPY</span><span class="w"> </span>.<span class="w"> </span>.
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--frozen<span class="w"> </span>--no-dev
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="c"># ── Runtime stage ────────────────────────────────────────────────</span>
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.12-slim</span>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="k">RUN</span><span class="w"> </span>groupadd<span class="w"> </span>-r<span class="w"> </span>app<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>useradd<span class="w"> </span>-r<span class="w"> </span>-g<span class="w"> </span>app<span class="w"> </span>-d<span class="w"> </span>/app<span class="w"> </span>-s<span class="w"> </span>/sbin/nologin<span class="w"> </span>app
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a>
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>builder<span class="w"> </span>/app/.venv<span class="w"> </span>/app/.venv
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/app/.venv/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a>
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a><span class="k">COPY</span><span class="w"> </span>--chown<span class="o">=</span>app:app<span class="w"> </span>.<span class="w"> </span>.
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>
+<a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a><span class="k">EXPOSE</span><span class="w"> </span><span class="s">8000</span>
+<a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>
+<a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a><span class="k">USER</span><span class="w"> </span><span class="s">app</span>
+<a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a>
+<a id="__codelineno-10-30" name="__codelineno-10-30" href="#__codelineno-10-30"></a><span class="k">CMD</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;uvicorn&quot;</span><span class="p">,</span><span class="s2">&quot;main:app&quot;</span><span class="p">,</span><span class="s2">&quot;--host&quot;</span><span class="p">,</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">]</span>
 </code></pre></div>
 <h3 id="minimal-auto-detected">Minimal (auto-detected)</h3>
 <p>If <code>package_manager</code> is omitted, it's inferred from <code>base_image</code> (<code>python:*</code> → pip, <code>node:*</code> → npm):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;{&quot;base_image&quot;:&quot;node:20-slim&quot;,&quot;cmd&quot;:[&quot;node&quot;,&quot;app.js&quot;]}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>fimod<span class="w"> </span>s<span class="w"> </span>-m<span class="w"> </span>@dockerfile
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;{&quot;base_image&quot;:&quot;node:20-slim&quot;,&quot;cmd&quot;:[&quot;node&quot;,&quot;app.js&quot;]}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>fimod<span class="w"> </span>s<span class="w"> </span>-m<span class="w"> </span>@dockerfile
 </code></pre></div>
 
 

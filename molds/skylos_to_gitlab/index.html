@@ -413,6 +413,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arguments
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#in-a-gitlab-ci-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -439,6 +450,17 @@
   
     <nav class="md-nav" aria-label="Transformation Logic">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#confidence-severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence &amp; Severity
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#fingerprinting" class="md-nav__link">
@@ -490,11 +512,45 @@
 <p>Convert Skylos dead code reports to GitLab Code Quality format</p>
 </blockquote>
 <p><strong>Output:</strong> <code>JSON</code></p>
+<table>
+<thead>
+<tr>
+<th>Arg</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>min-confidence</code></td>
+<td>Minimum confidence threshold (0-100). Items below this value are excluded.</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <p>This mold converts JSON reports from <code>duriantaco/skylos</code> (a Python static analysis tool) into the GitLab Code Quality (Code Climate) format. This allows Skylos results to be visualized directly in GitLab Merge Requests.</p>
 <h2 id="usage">Usage</h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>skylos_report.json<span class="w"> </span>-m<span class="w"> </span>@skylos_to_gitlab<span class="w"> </span>-o<span class="w"> </span>code_quality.json
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Filter out low-confidence results (potential false positives)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>skylos_report.json<span class="w"> </span>-m<span class="w"> </span>@skylos_to_gitlab<span class="w"> </span>--arg<span class="w"> </span>min-confidence<span class="o">=</span><span class="m">80</span><span class="w"> </span>-o<span class="w"> </span>code_quality.json
 </code></pre></div>
+<h3 id="arguments">Arguments</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Argument</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>min-confidence</code></td>
+<td style="text-align: left;"><code>0</code> (no filter)</td>
+<td style="text-align: left;">Minimum confidence threshold (0-100). Items below this value are excluded.</td>
+</tr>
+</tbody>
+</table>
 <h3 id="in-a-gitlab-ci-pipeline">In a GitLab CI pipeline</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">code_quality</span><span class="p">:</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">script</span><span class="p">:</span>
@@ -540,8 +596,14 @@
 </tr>
 </tbody>
 </table>
+<h3 id="confidence-severity">Confidence &amp; Severity</h3>
+<p>Skylos reports a <code>confidence</code> score (0-100) for each item. The mold uses it in two ways:</p>
+<ul>
+<li><strong>Filtering</strong>: Pass <code>--arg min-confidence=N</code> to exclude items with confidence below the threshold.</li>
+<li><strong>Severity mapping</strong>: Items with <code>confidence = 100</code> get severity <code>info</code>. Items with lower confidence get severity <code>minor</code>.</li>
+</ul>
 <h3 id="fingerprinting">Fingerprinting</h3>
-<p>A deterministic fingerprint is generated for each issue using a hash of the check name, file path, line number, and item name. This allows GitLab to track issues across commits even if line numbers shift slightly (though strict line matching is used here).</p>
+<p>A deterministic fingerprint is generated for each issue using the most qualified name available (<code>full_name</code> → <code>name</code>), the check name, file path, and line number. This allows GitLab to track issues across commits.</p>
 <h2 id="output-format">Output Format</h2>
 <p>The output is a JSON array of issue objects:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">[</span>

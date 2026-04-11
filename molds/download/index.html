@@ -453,6 +453,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="How it works">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filename-resolution-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filename resolution order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -499,7 +527,7 @@
 <tbody>
 <tr>
 <td><code>out</code></td>
-<td>Output filename (defaults to the last path segment of the URL)</td>
+<td>"Output filename (defaults to the last path segment of the URL)"</td>
 </tr>
 </tbody>
 </table>
@@ -546,6 +574,14 @@
 <p>The mold uses <code>input-format=http</code> to get the raw HTTP response body as bytes, then calls
 <code>set_output_format("raw")</code> and <code>set_output_file(filename)</code> to write the binary content
 directly to disk — bypassing JSON serialization entirely.</p>
+<h3 id="filename-resolution-order">Filename resolution order</h3>
+<ol>
+<li><code>--arg out=...</code> if provided</li>
+<li><code>Content-Disposition</code> header filename (auto-detected from the HTTP response)</li>
+<li>Last path segment of the URL (stripped of query params)</li>
+</ol>
+<h3 id="error-handling">Error handling</h3>
+<p>HTTP responses with status ≥ 400 abort with <code>gk_fail</code> instead of writing an error page to disk.</p>
 <h2 id="mold-directives">Mold directives</h2>
 <ul>
 <li><code>input-format=http</code> — expose the raw HTTP response (status, headers, body bytes)</li>
