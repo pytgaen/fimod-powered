@@ -24,11 +24,13 @@ This mold produces a single `.html` file with no external dependencies — open 
 
 ## Args
 
-| Arg           | Default   | Description                      |
-| ------------- | --------- | -------------------------------- |
-| `title`       | `Report`  | Page title and heading           |
-| `description` | *(empty)* | Subtitle shown below the title   |
-| `theme`       | `light`   | `light` or `dark`                |
+| Arg            | Default   | Description                                                                 |
+| -------------- | --------- | --------------------------------------------------------------------------- |
+| `title`        | `Report`  | Page title and heading                                                      |
+| `description`  | *(empty)* | Subtitle shown below the title                                              |
+| `theme`        | `light`   | `light` or `dark` (warns and falls back to `light` if unknown)              |
+| `timestamp`    | *(empty)* | Generation timestamp shown in footer (e.g. `--arg timestamp="$(date +%F)"`) |
+| `null-display` | `null`    | Display for null/missing values: `null`, `empty`, `dash`, or custom text    |
 
 ## Examples
 

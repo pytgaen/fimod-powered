@@ -104,14 +104,14 @@
 <header>
   <h1>Report</h1>
   <div class="meta">
-    <span>2 rows</span>
-    <span>2 columns</span>
+    <span>3 rows</span>
+    <span>3 columns</span>
   </div>
 </header>
 
 <div class="toolbar">
   <input type="text" class="search-box" placeholder="Filter rows…" id="search" autocomplete="off">
-  <span class="count" id="count">2 rows</span>
+  <span class="count" id="count">3 rows</span>
 </div>
 <div class="table-wrap">
   <table id="data-table">
@@ -119,16 +119,24 @@
       <tr>
         <th onclick="sortTable(0)">name<span class="sort-arrow">▲</span></th>
         <th onclick="sortTable(1)">score<span class="sort-arrow">▲</span></th>
+        <th onclick="sortTable(2)">email<span class="sort-arrow">▲</span></th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td title="Alice">Alice</td>
         <td class="number">92</td>
+        <td class="null">null</td>
       </tr>
       <tr>
         <td title="Bob">Bob</td>
-        <td class="number">87</td>
+        <td class="null">null</td>
+        <td title="bob@example.com">bob@example.com</td>
+      </tr>
+      <tr>
+        <td title="Charlie">Charlie</td>
+        <td class="number">78</td>
+        <td title="charlie@example.com">charlie@example.com</td>
       </tr>
     </tbody>
   </table>

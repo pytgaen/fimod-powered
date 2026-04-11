@@ -1,11 +1,8 @@
 [project]
 name = "my_package"
-version = "0.1.0"
-description = "Path dependencies for uv"
-dependencies = [
-    "my-local-lib",
-    "requests>=2.28.0,<3.0.0",
-]
+version = "1.0.0"
+description = "Test secondary source"
+dependencies = ["requests>=2.28.0,<3.0.0"]
 requires-python = ">=3.9.0,<4.0.0"
 
 [[project.authors]]
@@ -16,6 +13,7 @@ email = "dev@example.com"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv.sources.my-local-lib]
-path = "../my-local-lib"
-editable = true
+[[tool.uv.index]]
+name = "private"
+url = "https://pypi.example.com/simple/"
+priority = "supplemental"

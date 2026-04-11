@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="fimod html_report">
 <title>{{ title }}</title>
 <style>
   :root {
@@ -135,13 +136,13 @@
         {% for col in columns %}
         {% set val = row[col] %}
         {% if val is none %}
-        <td class="null">null</td>
+        <td class="null">{{ null_display }}</td>
         {% elif val is number %}
         <td class="number">{{ val }}</td>
         {% elif val is mapping or val is iterable and val is not string %}
         <td class="nested" title="{{ val | tojson }}">{{ val | tojson }}</td>
         {% else %}
-        <td>{{ val }}</td>
+        <td title="{{ val }}">{{ val }}</td>
         {% endif %}
         {% endfor %}
       </tr>
@@ -156,7 +157,7 @@
   <div class="kv-row">
     <div class="kv-key">{{ key }}</div>
     {% if val is none %}
-    <div class="kv-val null">null</div>
+    <div class="kv-val null">{{ null_display }}</div>
     {% elif val is mapping or val is iterable and val is not string %}
     <div class="kv-val nested">{{ val | tojson(indent=2) }}</div>
     {% else %}
@@ -178,7 +179,7 @@
 {% endif %}
 
 <footer>
-  Generated with <a href="https://github.com/pytgaen/fimod">fimod</a>
+  Generated with <a href="https://github.com/pytgaen/fimod">fimod</a>{% if timestamp %} &middot; {{ timestamp }}{% endif %}
 </footer>
 
 {% if kind == "table" %}

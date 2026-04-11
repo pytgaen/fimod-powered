@@ -1,0 +1,10 @@
+[tool.poetry]
+name = "my_package"
+version = "1.0.0"
+description = "Test bare version constraint"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+some-lib = "2.28"
+pinned-lib = "1.0.0"

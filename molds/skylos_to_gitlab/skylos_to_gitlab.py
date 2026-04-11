@@ -3,12 +3,14 @@ Convert Skylos dead code reports to GitLab Code Quality format.
 
 Usage:
   fimod s -i skylos_report.json -m @skylos_to_gitlab -o code_quality.json
+  fimod s -i skylos_report.json -m @skylos_to_gitlab --arg min-confidence=80
 
 In a GitLab CI pipeline:
   skylos --json > skylos_report.json
   fimod s -i skylos_report.json -m @skylos_to_gitlab -o gl-code-quality-report.json
 """
 # fimod: output-format=json
+# fimod: arg=min-confidence Minimum confidence threshold (0-100). Items below this value are excluded.
 
 def transform(data, args, **_):
     """
@@ -16,12 +18,14 @@ def transform(data, args, **_):
 
     Skylos Output Structure (analyzed):
     {
-      "unused_functions": [ {"name": "foo", "file": "...", "line": 10}, ... ],
+      "unused_functions": [ {"name": "foo", "file": "...", "line": 10, "confidence": 100}, ... ],
       "unused_imports": [...],
       "unused_variables": [...],
       ...
     }
     """
+
+    min_confidence = int(args.get("min-confidence", 0))
 
     issues = []
 
@@ -41,23 +45,30 @@ def transform(data, args, **_):
             continue
 
         for item in items:
-            # Extract info
+            confidence = item.get("confidence", 100)
+            if confidence < min_confidence:
+                continue
+
+            # Extract info — prefer short name for description, qualified name for fingerprint
             path = item.get("file") or item.get("filename") or "unknown"
-            name = item.get("name") or item.get("simple_name") or path
+            display_name = item.get("simple_name") or item.get("name") or path
+            stable_name = item.get("full_name") or item.get("name") or path
             line = item.get("line") or 1
 
             readable_type = check_name.replace("-", " ")  # unused-function -> unused function
-            description = f"{readable_type.capitalize()}: {name}"
+            description = f"{readable_type.capitalize()}: {display_name}"
 
-            # Generate stable fingerprint
-            fingerprint_raw = f"{check_name}:{path}:{line}:{name}"
+            severity = "info" if confidence == 100 else "minor"
+
+            # Generate stable fingerprint using the most qualified name available
+            fingerprint_raw = f"{check_name}:{path}:{line}:{stable_name}"
             fingerprint = hs_md5(fingerprint_raw)
 
             issues.append({
                 "description": description,
                 "check_name": check_name,
                 "fingerprint": fingerprint,
-                "severity": "info", # unused code is usually info/minor
+                "severity": severity,
                 "location": {
                     "path": path,
                     "lines": {

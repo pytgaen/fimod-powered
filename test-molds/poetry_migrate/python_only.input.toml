@@ -1,0 +1,8 @@
+[tool.poetry]
+name = "my_package"
+version = "0.1.0"
+description = "Only python constraint"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"

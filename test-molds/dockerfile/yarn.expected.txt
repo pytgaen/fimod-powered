@@ -6,9 +6,9 @@ RUN corepack enable
 COPY package.json yarn.lock* ./
 RUN yarn install --frozen-lockfile --production
 
-COPY . .
-
 ENV NODE_ENV=production
+
+COPY . .
 
 EXPOSE 3000
 

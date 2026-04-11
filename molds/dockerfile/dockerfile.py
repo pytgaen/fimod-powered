@@ -51,5 +51,11 @@ def transform(data, args, **_):
     data["is_python"] = pm in PYTHON_MANAGERS
     data["is_node"] = pm in NODE_MANAGERS
     data["multistage"] = data.get("multistage", False)
+    data["uv_version"] = data.get("uv_version", "latest")
+    data["uv_install"] = data.get("uv_install", "copy")
+    data["poetry_version"] = data.get("poetry_version")
+    data["poetry_install"] = data.get("poetry_install", "curl")
+    data["pipefail"] = data.get("pipefail", False)
+    data["extra_instructions"] = data.get("extra_instructions", {})
 
     return tpl_render_from_mold("templates/Dockerfile.j2", data)

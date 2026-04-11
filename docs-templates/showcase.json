@@ -55,7 +55,7 @@
       {
         "label": "Command",
         "lang": "bash",
-        "content": "fimod s -i https://github.com/astral-sh/uv -m @gh_latest"
+        "content": "fimod s -i https://github.com/astral-sh/uv/releases/latest  -m @gh_latest"
       },
       {
         "label": "Output",

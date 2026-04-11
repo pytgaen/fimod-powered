@@ -104,75 +104,29 @@
 <header>
   <h1>Report</h1>
   <div class="meta">
-    <span>2 rows</span>
-    <span>2 columns</span>
+    <span>3 fields</span>
   </div>
 </header>
 
-<div class="toolbar">
-  <input type="text" class="search-box" placeholder="Filter rows…" id="search" autocomplete="off">
-  <span class="count" id="count">2 rows</span>
-</div>
-<div class="table-wrap">
-  <table id="data-table">
-    <thead>
-      <tr>
-        <th onclick="sortTable(0)">name<span class="sort-arrow">▲</span></th>
-        <th onclick="sortTable(1)">score<span class="sort-arrow">▲</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td title="Alice">Alice</td>
-        <td class="number">92</td>
-      </tr>
-      <tr>
-        <td title="Bob">Bob</td>
-        <td class="number">87</td>
-      </tr>
-    </tbody>
-  </table>
+<div class="card">
+  <div class="kv-row">
+    <div class="kv-key">project</div>
+    <div class="kv-val">fimod</div>
+  </div>
+  <div class="kv-row">
+    <div class="kv-key">version</div>
+    <div class="kv-val null">null</div>
+  </div>
+  <div class="kv-row">
+    <div class="kv-key">license</div>
+    <div class="kv-val">LGPL-3.0</div>
+  </div>
 </div>
 
 
 <footer>
   Generated with <a href="https://github.com/pytgaen/fimod">fimod</a></footer>
 
-<script>
-const table = document.getElementById("data-table");
-const search = document.getElementById("search");
-const countEl = document.getElementById("count");
-const rows = Array.from(table.tBodies[0].rows);
-let sortCol = -1, sortAsc = true;
-
-search.addEventListener("input", () => {
-  const q = search.value.toLowerCase();
-  let visible = 0;
-  rows.forEach(row => {
-    const match = !q || row.textContent.toLowerCase().includes(q);
-    row.style.display = match ? "" : "none";
-    if (match) visible++;
-  });
-  countEl.textContent = visible + " / " + rows.length + " rows";
-});
-
-function sortTable(col) {
-  if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
-  document.querySelectorAll("th").forEach((th, i) => {
-    th.classList.toggle("sorted", i === col);
-    th.querySelector(".sort-arrow").textContent = i === col ? (sortAsc ? "▲" : "▼") : "▲";
-  });
-  rows.sort((a, b) => {
-    let va = a.cells[col].textContent.trim();
-    let vb = b.cells[col].textContent.trim();
-    const na = parseFloat(va), nb = parseFloat(vb);
-    if (!isNaN(na) && !isNaN(nb)) return sortAsc ? na - nb : nb - na;
-    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-  });
-  const tbody = table.tBodies[0];
-  rows.forEach(row => tbody.appendChild(row));
-}
-</script>
 
 </body>
 </html>

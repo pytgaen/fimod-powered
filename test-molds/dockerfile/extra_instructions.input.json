@@ -1,0 +1,18 @@
+{
+  "package_manager": "pip",
+  "system_packages": ["curl"],
+  "extra_instructions": {
+    "after_system": [
+      "COPY certs/ /usr/local/share/ca-certificates/",
+      "RUN update-ca-certificates"
+    ],
+    "after_install": [
+      "RUN python -m spacy download fr_core_news_sm"
+    ],
+    "after_copy": [
+      "RUN python manage.py collectstatic --noinput"
+    ]
+  },
+  "expose": [8000],
+  "cmd": ["gunicorn", "app:app"]
+}
