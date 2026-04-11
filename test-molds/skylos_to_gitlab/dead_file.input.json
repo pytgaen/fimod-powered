@@ -1,0 +1,14 @@
+{
+  "unused_functions": [],
+  "unused_imports": [],
+  "unused_classes": [],
+  "unused_variables": [],
+  "unused_parameters": [],
+  "unused_files": [
+    {
+      "name": "src/legacy/old_helpers.py",
+      "file": "src/legacy/old_helpers.py",
+      "confidence": 100
+    }
+  ]
+}

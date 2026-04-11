@@ -1,0 +1,14 @@
+[
+  {
+    "description": "Dead file: src/legacy/old_helpers.py",
+    "check_name": "dead-file",
+    "fingerprint": "a47cf140425e9e50e4ddf20c756875a3",
+    "severity": "info",
+    "location": {
+      "path": "src/legacy/old_helpers.py",
+      "lines": {
+        "begin": 1
+      }
+    }
+  }
+]

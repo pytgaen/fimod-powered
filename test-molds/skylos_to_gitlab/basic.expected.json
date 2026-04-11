@@ -2,7 +2,7 @@
   {
     "description": "Unused function: parse_config",
     "check_name": "unused-function",
-    "fingerprint": "0b349b331929c9a58706b52361fba5d1",
+    "fingerprint": "b1115f0b97d0159af469471fbe8559ab",
     "severity": "info",
     "location": {
       "path": "src/utils.py",

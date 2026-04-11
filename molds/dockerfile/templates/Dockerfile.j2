@@ -1,11 +1,25 @@
 {%- if multistage %}
 # ── Build stage ──────────────────────────────────────────────────
 FROM {{ base_image }} AS builder
+{% if pipefail %}
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+{% endif %}
 
 WORKDIR {{ workdir }}
 {% if package_manager == "uv" %}
+{% if uv_install == "curl" %}
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+RUN curl -LsSf https://astral.sh/uv/{% if uv_version != "latest" %}{{ uv_version }}/{% endif %}install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+{% elif uv_install == "pip" %}
+
+RUN pip install --no-cache-dir uv{% if uv_version != "latest" %}=={{ uv_version }}{% endif %}
+
+{% else %}
+
+COPY --from=ghcr.io/astral-sh/uv:{{ uv_version }} /uv /uvx /usr/local/bin/
+{% endif %}
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-dev --no-install-project
 
@@ -13,8 +27,21 @@ COPY . .
 
 RUN uv sync --frozen --no-dev
 {% elif package_manager == "poetry" %}
+{% if poetry_install == "pipx" %}
 
-RUN pip install --no-cache-dir poetry
+RUN pip install --no-cache-dir pipx && \
+    pipx install poetry{% if poetry_version %}=={{ poetry_version }}{% endif %}
+
+ENV PATH="/root/.local/bin:$PATH"
+{% elif poetry_install == "pip" %}
+
+RUN pip install --no-cache-dir poetry{% if poetry_version %}=={{ poetry_version }}{% endif %}
+{% else %}
+
+RUN curl -sSL https://install.python-poetry.org | python -{% if poetry_version %} --version {{ poetry_version }}{% endif %}
+
+ENV PATH="/root/.local/bin:$PATH"
+{% endif %}
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.in-project true \
  && poetry install --only main --no-interaction --no-ansi
@@ -47,6 +74,10 @@ FROM {{ base_image }}
 {% else %}
 FROM {{ base_image }}
 {% endif %}
+{% if pipefail %}
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+{% endif %}
 {% if labels %}
 
 {% for key, value in labels | items %}
@@ -67,6 +98,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {% endfor %}
  && rm -rf /var/lib/apt/lists/*
 {% endif %}
+{% if extra_instructions.after_system %}
+
+{% for instruction in extra_instructions.after_system %}
+{{ instruction }}
+{% endfor %}
+{% endif %}
 {% if user %}
 
 RUN groupadd -r {{ user }} && useradd -r -g {{ user }} -d {{ workdir }} -s /sbin/nologin {{ user }}
@@ -84,13 +121,36 @@ COPY --from=builder {{ workdir }}/node_modules {{ workdir }}/node_modules
 {% endif %}
 {% else %}
 {% if package_manager == "uv" %}
+{% if uv_install == "curl" %}
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+RUN curl -LsSf https://astral.sh/uv/{% if uv_version != "latest" %}{{ uv_version }}/{% endif %}install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+{% elif uv_install == "pip" %}
+
+RUN pip install --no-cache-dir uv{% if uv_version != "latest" %}=={{ uv_version }}{% endif %}
+
+{% else %}
+
+COPY --from=ghcr.io/astral-sh/uv:{{ uv_version }} /uv /uvx /usr/local/bin/
+{% endif %}
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-dev --no-install-project
 {% elif package_manager == "poetry" %}
+{% if poetry_install == "pipx" %}
 
-RUN pip install --no-cache-dir poetry
+RUN pip install --no-cache-dir pipx && \
+    pipx install poetry{% if poetry_version %}=={{ poetry_version }}{% endif %}
+
+ENV PATH="/root/.local/bin:$PATH"
+{% elif poetry_install == "pip" %}
+
+RUN pip install --no-cache-dir poetry{% if poetry_version %}=={{ poetry_version }}{% endif %}
+{% else %}
+
+RUN curl -sSL https://install.python-poetry.org | python -{% if poetry_version %} --version {{ poetry_version }}{% endif %}
+
+ENV PATH="/root/.local/bin:$PATH"
+{% endif %}
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false \
  && poetry install --only main --no-interaction --no-ansi
@@ -114,6 +174,18 @@ COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile --prod
 {% endif %}
 {% endif %}
+{% if extra_instructions.after_install %}
+
+{% for instruction in extra_instructions.after_install %}
+{{ instruction }}
+{% endfor %}
+{% endif %}
+{% if env %}
+
+{% for key, value in env | items %}
+ENV {{ key }}={{ value }}
+{% endfor %}
+{% endif %}
 
 {% if user %}
 COPY --chown={{ user }}:{{ user }} . .
@@ -124,10 +196,10 @@ COPY . .
 
 RUN uv sync --frozen --no-dev
 {% endif %}
-{% if env %}
+{% if extra_instructions.after_copy %}
 
-{% for key, value in env | items %}
-ENV {{ key }}={{ value }}
+{% for instruction in extra_instructions.after_copy %}
+{{ instruction }}
 {% endfor %}
 {% endif %}
 {% if expose %}
@@ -148,6 +220,9 @@ HEALTHCHECK \
 {% endif %}
 {% if healthcheck.timeout %}
     --timeout={{ healthcheck.timeout }} \
+{% endif %}
+{% if healthcheck.start_period %}
+    --start-period={{ healthcheck.start_period }} \
 {% endif %}
 {% if healthcheck.retries %}
     --retries={{ healthcheck.retries }} \

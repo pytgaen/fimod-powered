@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="fimod html_report">
 <title>Report</title>
 <style>
   :root {
@@ -109,8 +110,7 @@
 <div class="scalar">Hello World</div>
 
 <footer>
-  Generated with <a href="https://github.com/pytgaen/fimod">fimod</a>
-</footer>
+  Generated with <a href="https://github.com/pytgaen/fimod">fimod</a></footer>
 
 
 </body>

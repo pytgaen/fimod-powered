@@ -27,15 +27,67 @@ Only `cmd` (or `entrypoint`) is required. Everything else has sensible defaults.
 | `env` | dict | — | Environment variables |
 | `expose` | list | — | Ports to expose |
 | `user` | string | — | Non-root user (created automatically) |
-| `healthcheck` | object | — | `cmd`, `interval`, `timeout`, `retries` |
+| `healthcheck` | object | — | `cmd`, `interval`, `timeout`, `start_period`, `retries` |
 | `entrypoint` | list | — | Docker ENTRYPOINT |
 | `cmd` | list | — | Docker CMD |
+| `uv_version` | string | `latest` | uv version tag (e.g. `0.7.2`) |
+| `uv_install` | string | `copy` | uv install method: `copy`, `curl`, `pip` |
+| `poetry_version` | string | — | Poetry version to pin |
+| `poetry_install` | string | `curl` | Poetry install method: `curl`, `pipx`, `pip` |
+| `pipefail` | bool | `false` | Add `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` |
+| `extra_instructions` | object | — | Custom instructions at hook points (see below) |
+
+## Extra instructions
+
+For anything the mold doesn't handle natively, inject raw Dockerfile instructions at specific hook points:
+
+```yaml
+extra_instructions:
+  after_system:     # after apt-get install, before user creation
+    - "COPY certs/ /usr/local/share/ca-certificates/"
+    - "RUN update-ca-certificates"
+  after_install:    # after dependency install, before COPY . .
+    - "RUN python -m spacy download fr_core_news_sm"
+  after_copy:       # after COPY . ., before EXPOSE/CMD
+    - "RUN python manage.py collectstatic --noinput"
+    - "VOLUME /app/data"
+```
+
+## Converting an existing Dockerfile
+
+Use `CONVERT_PROMPT.md` with any LLM to convert an existing Dockerfile into a fimod descriptor:
+
+```
+cat molds/dockerfile/CONVERT_PROMPT.md my-existing/Dockerfile | llm "convert this Dockerfile"
+```
+
+The prompt guides the LLM to map standard Dockerfile patterns to descriptor fields, and route custom instructions into the appropriate `extra_instructions` hooks.
 
 ## Layer caching
 
 The template is optimized for Docker layer caching: dependency manifest files are copied and installed **before** the source code. This means `docker build` only re-installs dependencies when `requirements.txt`, `pyproject.toml`, `package.json`, etc. actually change.
 
 With `multistage: true`, the builder stage installs everything, then only the virtualenv (`.venv`) or `node_modules` is copied into the final image — no build tools, no cache, no package manager in production.
+
+## Install methods
+
+### uv (`uv_install`)
+
+| Value | Method | Kaniko-compatible |
+|-------|--------|:-:|
+| `copy` (default) | `COPY --from=ghcr.io/astral-sh/uv:TAG` | no |
+| `curl` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` | yes |
+| `pip` | `pip install uv` | yes |
+
+### Poetry (`poetry_install`)
+
+| Value | Method | Needs curl |
+|-------|--------|:-:|
+| `curl` (default) | `curl -sSL https://install.python-poetry.org \| python -` | yes |
+| `pipx` | `pip install pipx && pipx install poetry` | no |
+| `pip` | `pip install poetry` | no |
+
+Both support version pinning via `uv_version` / `poetry_version`.
 
 ## Examples
 
@@ -59,7 +111,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-COPY . .
+COPY --chown=app:app . .
 
 RUN uv sync --frozen --no-dev
 
@@ -80,6 +132,7 @@ healthcheck:
   cmd: ["curl", "-f", "http://localhost:8000/health"]
   interval: 30s
   timeout: 5s
+  start_period: 10s
 cmd: ["gunicorn", "app:app"]
 ```
 
@@ -92,7 +145,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir poetry
+RUN curl -sSL https://install.python-poetry.org | python -
+ENV PATH="/root/.local/bin:$PATH"
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false \
  && poetry install --only main --no-interaction --no-ansi
@@ -104,6 +158,7 @@ EXPOSE 8000
 HEALTHCHECK \
     --interval=30s \
     --timeout=5s \
+    --start-period=10s \
     CMD ["curl","-f","http://localhost:8000/health"]
 
 CMD ["gunicorn","app:app"]

@@ -5,7 +5,8 @@
   "healthcheck": {
     "cmd": ["curl", "-f", "http://localhost:8000/health"],
     "interval": "30s",
-    "timeout": "5s"
+    "timeout": "5s",
+    "start_period": "10s"
   },
   "cmd": ["gunicorn", "app:app"]
 }

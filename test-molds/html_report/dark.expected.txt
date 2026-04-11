@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="fimod html_report">
 <title>Dark Report</title>
 <style>
   :root {
@@ -122,11 +123,11 @@
     </thead>
     <tbody>
       <tr>
-        <td>Alice</td>
+        <td title="Alice">Alice</td>
         <td class="number">92</td>
       </tr>
       <tr>
-        <td>Bob</td>
+        <td title="Bob">Bob</td>
         <td class="number">87</td>
       </tr>
     </tbody>
@@ -135,8 +136,7 @@
 
 
 <footer>
-  Generated with <a href="https://github.com/pytgaen/fimod">fimod</a>
-</footer>
+  Generated with <a href="https://github.com/pytgaen/fimod">fimod</a></footer>
 
 <script>
 const table = document.getElementById("data-table");

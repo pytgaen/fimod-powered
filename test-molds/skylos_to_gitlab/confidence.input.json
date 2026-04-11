@@ -1,0 +1,25 @@
+{
+  "unused_functions": [
+    {
+      "name": "definite_dead",
+      "full_name": "src.utils.definite_dead",
+      "simple_name": "definite_dead",
+      "file": "src/utils.py",
+      "line": 10,
+      "confidence": 100
+    },
+    {
+      "name": "maybe_dead",
+      "full_name": "src.utils.maybe_dead",
+      "simple_name": "maybe_dead",
+      "file": "src/utils.py",
+      "line": 25,
+      "confidence": 75
+    }
+  ],
+  "unused_imports": [],
+  "unused_classes": [],
+  "unused_variables": [],
+  "unused_parameters": [],
+  "unused_files": []
+}

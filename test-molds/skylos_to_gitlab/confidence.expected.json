@@ -1,0 +1,14 @@
+[
+  {
+    "description": "Unused function: definite_dead",
+    "check_name": "unused-function",
+    "fingerprint": "cd7ca654008505e1e3911ebe4d7014d9",
+    "severity": "info",
+    "location": {
+      "path": "src/utils.py",
+      "lines": {
+        "begin": 10
+      }
+    }
+  }
+]

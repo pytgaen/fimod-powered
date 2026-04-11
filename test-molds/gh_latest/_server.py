@@ -3,6 +3,9 @@
 Usage: uv run _server.py <port_file> <tag>
 
 Responds 302 with Location header on /releases/latest, simulating GitHub's redirect.
+Supports multiple paths:
+  /releases/latest         — 302 redirect to /releases/tag/<tag>
+  /no-release/releases/latest — 200 with no Location (simulates repo without releases)
 Writes the bound port to <port_file> once ready.
 """
 
@@ -16,7 +19,11 @@ def main():
 
     class Handler(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
-            if "/releases/latest" in self.path:
+            if self.path == "/no-release/releases/latest":
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"No releases found")
+            elif "/releases/latest" in self.path:
                 self.send_response(302)
                 self.send_header(
                     "Location",

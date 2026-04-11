@@ -47,6 +47,16 @@ The mold uses `input-format=http` to get the raw HTTP response body as bytes, th
 `set_output_format("raw")` and `set_output_file(filename)` to write the binary content
 directly to disk — bypassing JSON serialization entirely.
 
+### Filename resolution order
+
+1. `--arg out=...` if provided
+2. `Content-Disposition` header filename (auto-detected from the HTTP response)
+3. Last path segment of the URL (stripped of query params)
+
+### Error handling
+
+HTTP responses with status ≥ 400 abort with `gk_fail` instead of writing an error page to disk.
+
 ## Mold directives
 
 - `input-format=http` — expose the raw HTTP response (status, headers, body bytes)

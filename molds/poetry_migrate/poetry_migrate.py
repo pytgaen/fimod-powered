@@ -7,8 +7,8 @@ Usage:
   fimod s -i pyproject.toml -m @poetry_migrate -o new_pyproject.toml --arg target=uv --arg build=setuptools
 """
 # fimod: output-format=toml
-# fimod: arg=target  Migration target: poetry2 or uv (default: poetry2)
-# fimod: arg=build   Build backend for uv target: hatchling, setuptools, flit, pdm, uv (default: hatchling)
+# fimod: arg=target  "Migration target: poetry2 or uv (default: poetry2)"
+# fimod: arg=build   "Build backend for uv target: hatchling, setuptools, flit, pdm, uv (default: hatchling)"
 
 
 def parse_people(items):
@@ -58,6 +58,7 @@ def convert_constraint(constraint):
                 upper = f"0.0.{patch + 1}"
             return f">={lower},<{upper}"
         except Exception:
+            msg_warn("Could not parse caret constraint: " + s + " — keeping as-is")
             return s
 
     if s.startswith("~"):
@@ -74,7 +75,12 @@ def convert_constraint(constraint):
                 upper = f"{major + 1}.0.0"
             return f">={lower},<{upper}"
         except Exception:
+            msg_warn("Could not parse tilde constraint: " + s + " — keeping as-is")
             return s
+
+    # Bare version without operator → pin with ==
+    if s and s[0].isdigit():
+        return f"=={s}"
 
     return s
 
@@ -95,7 +101,7 @@ def convert_dependency(name, req, target, path_sources):
             if target == "uv":
                 source_entry = {"path": dep_path}
                 if req.get("develop", False):
-                    source_entry["editable"] = dep_path
+                    source_entry["editable"] = True
                 path_sources[name] = source_entry
             return name
 
@@ -150,6 +156,9 @@ def transform(data, args, **_):
 
     project = {}
     path_sources = {}  # collects path/git deps for [tool.uv.sources]
+
+    if "packages" in poetry:
+        msg_warn("'packages' config is not migrated — configure your build backend manually")
 
     # 1. Metadata
     for key in ["name", "version", "description", "readme", "license"]:
@@ -245,6 +254,10 @@ def transform(data, args, **_):
                 index["url"] = source["url"]
             if "default" in source and source["default"]:
                 index["default"] = True
+            if source.get("secondary"):
+                index["priority"] = "supplemental"
+            elif source.get("primary"):
+                index["priority"] = "primary"
             indexes.append(index)
         if indexes:
             tool_uv["index"] = indexes
