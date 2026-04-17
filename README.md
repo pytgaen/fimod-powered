@@ -84,4 +84,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on the test fixture format.
 
 ## License
 
-[LGPL-3.0](LICENSE.txt)
+[Apache-2.0](LICENSE.txt)

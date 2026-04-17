@@ -22,3 +22,14 @@ tasks:
     desc: Remove generated docs and site directories
     cmds:
       - rm -rf docs/ site/
+
+  test:all:
+    desc: Run fimod tests for every mold
+    cmds:
+      - |
+        set -e
+        for mold in dockerfile download gh_latest html_report poetry_migrate skylos_to_gitlab; do
+          echo ""
+          echo "── $mold ──"
+          fimod mold test "molds/$mold/$mold.py" "test-molds/$mold"
+        done

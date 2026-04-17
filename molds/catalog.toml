@@ -3,7 +3,7 @@ description = "Generate a production-ready Dockerfile from a JSON/YAML descripto
 path = "dockerfile/dockerfile.py"
 readme = "dockerfile/README.md"
 output_format = "txt"
-hash = "8badf3277af3dd1f8da96bb747170507"
+hash = "511261be79db72929cc1619980ad68fa"
 files = [
     "dockerfile/CONVERT_PROMPT.md",
     "dockerfile/templates/Dockerfile.j2",
@@ -17,7 +17,7 @@ input_format = "http"
 hash = "ec46ba23f79b8673e14d0ddf69b1af2a"
 
 [molds.download.args]
-out = '"Output filename (defaults to the last path segment of the URL)"'
+out = "Output filename (defaults to the last path segment of the URL)"
 
 [molds.gh_latest]
 description = "Get the latest release tag or download URL from a GitHub repository"
@@ -29,8 +29,8 @@ options = ["no-follow"]
 hash = "f93132dc5ee1e9f9dca83157b03281d4"
 
 [molds.gh_latest.args]
-asset = '"Asset filename pattern - supports {tag} and {version} placeholders"'
-repo = '"GitHub repository (owner/repo) - required for download URL"'
+asset = "Asset filename pattern - supports {tag} and {version} placeholders"
+repo = "GitHub repository (owner/repo) - required for download URL"
 
 [molds.html_report]
 description = "Generate a standalone HTML report from JSON/CSV data"
@@ -52,11 +52,13 @@ description = "Migrate a Poetry pyproject.toml to Poetry 2 or uv format"
 path = "poetry_migrate/poetry_migrate.py"
 readme = "poetry_migrate/README.md"
 output_format = "toml"
-hash = "21da886d2235cc5dfb677ba3e51cfe3a"
+hash = "50139a8dc2828fdc24945696f8e61352"
+files = ["poetry_migrate/MIGRATE_FULL_PROMPT.md"]
 
 [molds.poetry_migrate.args]
-build = '"Build backend for uv target: hatchling'
-target = '"Migration target: poetry2 or uv (default: poetry2)"'
+build = "Build backend for uv target: hatchling, setuptools, flit, pdm, uv (default: hatchling)"
+index_strategy = "uv index-strategy: first-index (default), unsafe-best-match, unsafe-first-match"
+target = "Migration target: poetry2 or uv (default: poetry2)"
 
 [molds.skylos_to_gitlab]
 description = "Convert Skylos dead code reports to GitLab Code Quality format"

@@ -1,11 +1,8 @@
 [project]
 name = "my_package"
 version = "0.1.0"
-description = "Path dependencies for uv"
-dependencies = [
-    "my-local-lib",
-    "requests>=2.28.0,<3.0.0",
-]
+description = "URL dependency for uv"
+dependencies = ["my-wheel"]
 requires-python = ">=3.9,<4.0"
 
 [[project.authors]]
@@ -16,6 +13,5 @@ email = "dev@example.com"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv.sources.my-local-lib]
-path = "../my-local-lib"
-editable = true
+[tool.uv.sources.my-wheel]
+url = "https://example.com/my_wheel-1.0-py3-none-any.whl"

@@ -1,0 +1,3 @@
+[args]
+target = "uv"
+index_strategy = "unsafe-best-match"

@@ -1,0 +1,14 @@
+{
+  "package_manager": "poetry",
+  "multistage": true,
+  "skip_copy_all": true,
+  "extra_instructions": {
+    "runtime": {
+      "finalize": [
+        {"cp": {"src/": "/app/src/"}},
+        {"cp": {"config/": "/app/config/"}}
+      ]
+    }
+  },
+  "cmd": ["python", "-m", "app"]
+}

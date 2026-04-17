@@ -1,10 +1,10 @@
 [project]
 name = "my_package"
-version = "1.0.0"
-description = "Test bare version constraint"
+version = "0.1.0"
+description = "Multi-constraint deps"
 dependencies = [
-    "pinned-lib==1.0.0",
-    "some-lib==2.28",
+    "multi>=1.0.0,<2.0.0; python_version >= '3.8' and python_version < '3.11'",
+    "multi>=2.0.0,<3.0.0; python_version >= '3.11'",
 ]
 requires-python = ">=3.9,<4.0"
 

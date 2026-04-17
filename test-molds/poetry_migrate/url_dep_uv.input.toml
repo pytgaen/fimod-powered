@@ -1,0 +1,9 @@
+[tool.poetry]
+name = "my_package"
+version = "0.1.0"
+description = "URL dependency for uv"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+my-wheel = {url = "https://example.com/my_wheel-1.0-py3-none-any.whl"}

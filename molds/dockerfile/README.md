@@ -23,7 +23,8 @@ Only `cmd` (or `entrypoint`) is required. Everything else has sensible defaults.
 | `workdir` | string | `/app` | Working directory |
 | `system_packages` | list | — | APT packages to install |
 | `labels` | dict | — | Docker labels |
-| `build_args` | list | — | Build-time arguments |
+| `build_args` | list | — | Build-time ARG declarations (runtime stage) |
+| `builder_build_args` | list | — | Build-time ARG declarations for the **builder** stage (private-registry credentials, etc.) |
 | `env` | dict | — | Environment variables |
 | `expose` | list | — | Ports to expose |
 | `user` | string | — | Non-root user (created automatically) |
@@ -35,23 +36,41 @@ Only `cmd` (or `entrypoint`) is required. Everything else has sensible defaults.
 | `poetry_version` | string | — | Poetry version to pin |
 | `poetry_install` | string | `curl` | Poetry install method: `curl`, `pipx`, `pip` |
 | `pipefail` | bool | `false` | Add `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` |
-| `extra_instructions` | object | — | Custom instructions at hook points (see below) |
+| `skip_copy_all` | bool | `false` | Omit the runtime `COPY . .`. Use when you want fully selective copies via `runtime.finalize` + `.dockerignore` |
+| `extra_instructions` | object | — | Custom instructions at hook points, split by stage (see below) |
 
 ## Extra instructions
 
-For anything the mold doesn't handle natively, inject raw Dockerfile instructions at specific hook points:
+For anything the mold doesn't handle natively, inject instructions at specific hook points. The block is split by stage (`builder` / `runtime`), each with three hooks:
 
 ```yaml
 extra_instructions:
-  after_system:     # after apt-get install, before user creation
-    - "COPY certs/ /usr/local/share/ca-certificates/"
-    - "RUN update-ca-certificates"
-  after_install:    # after dependency install, before COPY . .
-    - "RUN python -m spacy download fr_core_news_sm"
-  after_copy:       # after COPY . ., before EXPOSE/CMD
-    - "RUN python manage.py collectstatic --noinput"
-    - "VOLUME /app/data"
+  builder:                  # only rendered if multistage: true
+    before_install_pkgmgr:  # start of builder, before installing poetry/uv/npm
+      - 'ENV POETRY_HTTP_BASIC_PRIVATE_USERNAME="${PYPI_USERNAME}"'
+    before_install_deps:    # pkgmgr installed, before `poetry install` / `uv sync`
+      - "RUN poetry config http-basic.private $PYPI_USERNAME $PYPI_PASSWORD"
+    finalize:               # end of builder, after deps install + COPY . .
+      - "RUN poetry run python -m app.precompile"
+
+  runtime:
+    after_os_update:        # after apt-get install, before user creation
+      - cp: {certs/: /usr/local/share/ca-certificates/}
+      - "RUN update-ca-certificates"
+    after_deps_install:     # after dependency install, before COPY . .
+      - "RUN python -m spacy download fr_core_news_sm"
+    finalize:               # after COPY . ., before EXPOSE/CMD
+      - "RUN python manage.py collectstatic --noinput"
+      - "VOLUME /app/data"
 ```
+
+Each hook accepts a list of entries. Every entry is one of:
+
+- **Raw string** — inserted verbatim as a Dockerfile line (`"RUN ..."`, `"ENV ..."`, `"VOLUME ..."`, ...).
+- **`{cp: {src: dest}}`** — expands to `COPY src dest` (with `--chown=user:user` auto-added when `user` is set).
+- **`{cp: path/}`** — shorthand expanding to `COPY path/ <workdir>/path/` (same-name inside the working directory).
+
+For private-registry auth: declare `ARG` via `builder_build_args` (not `build_args`, which only reaches the runtime stage), bind them to `ENV` via `builder.before_install_pkgmgr`, then optionally configure the package manager via `builder.before_install_deps`.
 
 ## Converting an existing Dockerfile
 

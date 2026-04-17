@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "my_package"
+version = "1.0.0"
+description = "Explicit index-strategy"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.28"
+
+[[tool.poetry.source]]
+name = "private"
+url = "https://pypi.example.com/simple/"
+secondary = true
+
+[[tool.poetry.source]]
+name = "mirror"
+url = "https://mirror.example.com/simple/"

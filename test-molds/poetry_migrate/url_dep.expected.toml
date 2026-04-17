@@ -1,17 +1,14 @@
 [project]
 name = "my_package"
 version = "0.1.0"
-description = "A test package"
-dependencies = ["requests>=2.28.0,<3.0.0"]
+description = "URL dependency"
+dependencies = ["my-wheel @ https://example.com/my_wheel-1.0-py3-none-any.whl"]
 requires-python = ">=3.9,<4.0"
 
 [[project.authors]]
-name = "Test User"
-email = "test@example.com"
+name = "Dev"
+email = "dev@example.com"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[dependency-groups]
-dev = ["pytest>=7.0.0,<8.0.0"]
