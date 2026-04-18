@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/logo-favicon.jpg">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -49,7 +49,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -648,7 +648,13 @@
 <td><code>build_args</code></td>
 <td>list</td>
 <td>—</td>
-<td>Build-time arguments</td>
+<td>Build-time ARG declarations (runtime stage)</td>
+</tr>
+<tr>
+<td><code>builder_build_args</code></td>
+<td>list</td>
+<td>—</td>
+<td>Build-time ARG declarations for the <strong>builder</strong> stage (private-registry credentials, etc.)</td>
 </tr>
 <tr>
 <td><code>env</code></td>
@@ -717,25 +723,47 @@
 <td>Add <code>SHELL ["/bin/bash", "-o", "pipefail", "-c"]</code></td>
 </tr>
 <tr>
+<td><code>skip_copy_all</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>Omit the runtime <code>COPY . .</code>. Use when you want fully selective copies via <code>runtime.finalize</code> + <code>.dockerignore</code></td>
+</tr>
+<tr>
 <td><code>extra_instructions</code></td>
 <td>object</td>
 <td>—</td>
-<td>Custom instructions at hook points (see below)</td>
+<td>Custom instructions at hook points, split by stage (see below)</td>
 </tr>
 </tbody>
 </table>
 <h2 id="extra-instructions">Extra instructions</h2>
-<p>For anything the mold doesn't handle natively, inject raw Dockerfile instructions at specific hook points:</p>
+<p>For anything the mold doesn't handle natively, inject instructions at specific hook points. The block is split by stage (<code>builder</code> / <code>runtime</code>), each with three hooks:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">extra_instructions</span><span class="p">:</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">after_system</span><span class="p">:</span><span class="w">     </span><span class="c1"># after apt-get install, before user creation</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;COPY</span><span class="nv"> </span><span class="s">certs/</span><span class="nv"> </span><span class="s">/usr/local/share/ca-certificates/&quot;</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">update-ca-certificates&quot;</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">after_install</span><span class="p">:</span><span class="w">    </span><span class="c1"># after dependency install, before COPY . .</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">python</span><span class="nv"> </span><span class="s">-m</span><span class="nv"> </span><span class="s">spacy</span><span class="nv"> </span><span class="s">download</span><span class="nv"> </span><span class="s">fr_core_news_sm&quot;</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">after_copy</span><span class="p">:</span><span class="w">       </span><span class="c1"># after COPY . ., before EXPOSE/CMD</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">python</span><span class="nv"> </span><span class="s">manage.py</span><span class="nv"> </span><span class="s">collectstatic</span><span class="nv"> </span><span class="s">--noinput&quot;</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;VOLUME</span><span class="nv"> </span><span class="s">/app/data&quot;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">builder</span><span class="p">:</span><span class="w">                  </span><span class="c1"># only rendered if multistage: true</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">before_install_pkgmgr</span><span class="p">:</span><span class="w">  </span><span class="c1"># start of builder, before installing poetry/uv/npm</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&#39;ENV</span><span class="nv"> </span><span class="s">POETRY_HTTP_BASIC_PRIVATE_USERNAME=&quot;${PYPI_USERNAME}&quot;&#39;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">before_install_deps</span><span class="p">:</span><span class="w">    </span><span class="c1"># pkgmgr installed, before `poetry install` / `uv sync`</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">poetry</span><span class="nv"> </span><span class="s">config</span><span class="nv"> </span><span class="s">http-basic.private</span><span class="nv"> </span><span class="s">$PYPI_USERNAME</span><span class="nv"> </span><span class="s">$PYPI_PASSWORD&quot;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">finalize</span><span class="p">:</span><span class="w">               </span><span class="c1"># end of builder, after deps install + COPY . .</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">poetry</span><span class="nv"> </span><span class="s">run</span><span class="nv"> </span><span class="s">python</span><span class="nv"> </span><span class="s">-m</span><span class="nv"> </span><span class="s">app.precompile&quot;</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">runtime</span><span class="p">:</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="nt">after_os_update</span><span class="p">:</span><span class="w">        </span><span class="c1"># after apt-get install, before user creation</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cp</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">certs/</span><span class="p">:</span><span class="w"> </span><span class="nv">/usr/local/share/ca-certificates/</span><span class="p p-Indicator">}</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">update-ca-certificates&quot;</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">after_deps_install</span><span class="p">:</span><span class="w">     </span><span class="c1"># after dependency install, before COPY . .</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">python</span><span class="nv"> </span><span class="s">-m</span><span class="nv"> </span><span class="s">spacy</span><span class="nv"> </span><span class="s">download</span><span class="nv"> </span><span class="s">fr_core_news_sm&quot;</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="nt">finalize</span><span class="p">:</span><span class="w">               </span><span class="c1"># after COPY . ., before EXPOSE/CMD</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;RUN</span><span class="nv"> </span><span class="s">python</span><span class="nv"> </span><span class="s">manage.py</span><span class="nv"> </span><span class="s">collectstatic</span><span class="nv"> </span><span class="s">--noinput&quot;</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;VOLUME</span><span class="nv"> </span><span class="s">/app/data&quot;</span>
 </code></pre></div>
+<p>Each hook accepts a list of entries. Every entry is one of:</p>
+<ul>
+<li><strong>Raw string</strong> — inserted verbatim as a Dockerfile line (<code>"RUN ..."</code>, <code>"ENV ..."</code>, <code>"VOLUME ..."</code>, ...).</li>
+<li><strong><code>{cp: {src: dest}}</code></strong> — expands to <code>COPY src dest</code> (with <code>--chown=user:user</code> auto-added when <code>user</code> is set).</li>
+<li><strong><code>{cp: path/}</code></strong> — shorthand expanding to <code>COPY path/ &lt;workdir&gt;/path/</code> (same-name inside the working directory).</li>
+</ul>
+<p>For private-registry auth: declare <code>ARG</code> via <code>builder_build_args</code> (not <code>build_args</code>, which only reaches the runtime stage), bind them to <code>ENV</code> via <code>builder.before_install_pkgmgr</code>, then optionally configure the package manager via <code>builder.before_install_deps</code>.</p>
 <h2 id="converting-an-existing-dockerfile">Converting an existing Dockerfile</h2>
 <p>Use <code>CONVERT_PROMPT.md</code> with any LLM to convert an existing Dockerfile into a fimod descriptor:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cat molds/dockerfile/CONVERT_PROMPT.md my-existing/Dockerfile | llm &quot;convert this Dockerfile&quot;
@@ -995,7 +1023,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","navigation.top","content.code.copy","content.tabs.link","search.highlight","search.suggest","navigation.footer"],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
     
   </body>

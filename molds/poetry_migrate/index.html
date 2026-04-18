@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/logo-favicon.jpg">
-      <meta name="generator" content="zensical-0.0.32">
+      <meta name="generator" content="zensical-0.0.33">
     
     
       
@@ -49,7 +49,7 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,500,500i,700,700i%7CJetBrains+Mono:400,400i,700,700i&amp;display=fallback">
         <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
       
     
@@ -451,6 +451,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#index-resolution-uv-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index Resolution (uv target)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#known-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -466,6 +477,17 @@
     <span class="md-ellipsis">
       
         Recommended Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-project-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Project Migration
       
     </span>
   </a>
@@ -505,11 +527,15 @@
 <tbody>
 <tr>
 <td><code>build</code></td>
-<td>"Build backend for uv target: hatchling</td>
+<td>Build backend for uv target: hatchling, setuptools, flit, pdm, uv (default: hatchling)</td>
+</tr>
+<tr>
+<td><code>index_strategy</code></td>
+<td>uv index-strategy: first-index (default), unsafe-best-match, unsafe-first-match</td>
 </tr>
 <tr>
 <td><code>target</code></td>
-<td>"Migration target: poetry2 or uv (default: poetry2)"</td>
+<td>Migration target: poetry2 or uv (default: poetry2)</td>
 </tr>
 </tbody>
 </table>
@@ -523,6 +549,9 @@
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Poetry → uv (setuptools backend)</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>pyproject.toml<span class="w"> </span>-m<span class="w"> </span>@poetry_migrate<span class="w"> </span>--arg<span class="w"> </span><span class="nv">target</span><span class="o">=</span>uv<span class="w"> </span>--arg<span class="w"> </span><span class="nv">build</span><span class="o">=</span>setuptools<span class="w"> </span>-o<span class="w"> </span>pyproject.toml<span class="w"> </span>-i
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Poetry → uv, preserving Poetry&#39;s &quot;search every index&quot; semantics</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>fimod<span class="w"> </span>s<span class="w"> </span>-i<span class="w"> </span>pyproject.toml<span class="w"> </span>-m<span class="w"> </span>@poetry_migrate<span class="w"> </span>--arg<span class="w"> </span><span class="nv">target</span><span class="o">=</span>uv<span class="w"> </span>--arg<span class="w"> </span><span class="nv">index_strategy</span><span class="o">=</span>unsafe-best-match<span class="w"> </span>-o<span class="w"> </span>pyproject.toml<span class="w"> </span>-i
 </code></pre></div>
 <h2 id="why-this-mold">Why This Mold?</h2>
 <p>There is no built-in migration command in Poetry, uv, or pip. Existing third-party tools (<code>pdm import</code>, <code>migrate-to-uv</code>) are either targeting a different ecosystem or handle only basic cases. None of them convert plugins, offer build backend choice, or support dual targets.</p>
@@ -532,7 +561,7 @@
 <li><strong>Plugins → entry-points</strong> — no other migration tool does this</li>
 <li><strong>5 build backends</strong> — hatchling, setuptools, flit, pdm, uv-build</li>
 <li><strong>Git + path deps</strong> with full ref support (branch/tag/rev, editable)</li>
-<li><strong>Poetry sources → <code>[[tool.uv.index]]</code></strong></li>
+<li><strong>Sources</strong> — preserved as <code>[[tool.poetry.source]]</code> (poetry2) or <code>[[tool.uv.index]]</code> (uv), with <code>default</code>/<code>secondary</code>/<code>primary</code> normalized to <code>priority</code></li>
 <li><strong>Preserves <code>[tool.ruff]</code>, <code>[tool.pytest]</code>, etc.</strong> — non-Poetry sections are kept as-is</li>
 <li><strong>Dry run</strong> — preview on stdout before writing in place</li>
 </ul>
@@ -559,7 +588,7 @@
 <tr>
 <td style="text-align: left;"><code>[tool.poetry.extras]</code></td>
 <td style="text-align: left;"><code>[project.optional-dependencies]</code></td>
-<td style="text-align: left;">Direct mapping.</td>
+<td style="text-align: left;">Bare dep names are expanded to full PEP 508 strings using version/extras from <code>[tool.poetry.dependencies]</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>[tool.poetry.plugins]</code></td>
@@ -582,8 +611,8 @@
 <td style="text-align: left;">All named groups preserved.</td>
 </tr>
 <tr>
-<td style="text-align: left;">Git deps (<code>git</code>, <code>branch</code>, <code>tag</code>, <code>rev</code>)</td>
-<td style="text-align: left;">PEP 508 (poetry2) or <code>[tool.uv.sources]</code> (uv)</td>
+<td style="text-align: left;">Git deps (<code>git</code>, <code>branch</code>, <code>tag</code>, <code>rev</code>, <code>subdirectory</code>)</td>
+<td style="text-align: left;">PEP 508 + <code>#subdirectory=</code> (poetry2) or <code>[tool.uv.sources]</code> (uv)</td>
 <td style="text-align: left;">Full ref support.</td>
 </tr>
 <tr>
@@ -592,9 +621,14 @@
 <td style="text-align: left;">Editable flag preserved.</td>
 </tr>
 <tr>
+<td style="text-align: left;">Per-dep <code>source = "name"</code> (uv)</td>
+<td style="text-align: left;"><code>[tool.uv.sources] &lt;dep&gt; = { index = "name" }</code></td>
+<td style="text-align: left;">Associates a dep with a specific index.</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>[[tool.poetry.source]]</code></td>
-<td style="text-align: left;"><code>[[tool.uv.index]]</code> (uv)</td>
-<td style="text-align: left;">Name, URL, default flag.</td>
+<td style="text-align: left;"><code>[[tool.poetry.source]]</code> (poetry2) or <code>[[tool.uv.index]]</code> (uv)</td>
+<td style="text-align: left;">Poetry 1 flags (<code>default</code>/<code>secondary</code>/<code>primary</code>) normalized to <code>priority</code>. For uv: <code>default → default=true</code>, <code>explicit → explicit=true</code>; supplemental/primary have no direct uv equivalent (declaration order applies).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>[build-system]</code></td>
@@ -683,14 +717,43 @@
 </tr>
 </tbody>
 </table>
+<h2 id="index-resolution-uv-target">Index Resolution (uv target)</h2>
+<p>Poetry consults every declared source and picks the best version. uv defaults to <code>index-strategy = "first-index"</code> (only the first index where a package exists is used) to prevent dependency-confusion attacks. When multiple indexes are declared and <code>index_strategy</code> is not set, the mold emits a warning.</p>
+<p>Use <code>--arg index_strategy=&lt;value&gt;</code>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Value</th>
+<th style="text-align: left;">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>first-index</code></td>
+<td style="text-align: left;">uv default. Safer; only the first index is consulted per package.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>unsafe-best-match</code></td>
+<td style="text-align: left;">Closest to Poetry. Searches every index, picks the best version.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>unsafe-first-match</code></td>
+<td style="text-align: left;">Searches every index, picks the first match.</td>
+</tr>
+</tbody>
+</table>
+<p>For tighter control, set <code>explicit = true</code> on private indexes and pin specific deps to them via <code>[tool.uv.sources]</code>.</p>
 <h2 id="known-limitations">Known Limitations</h2>
 <p>These Poetry features are not converted (manual review needed):</p>
 <ul>
 <li><strong><code>allow-prereleases</code></strong> per dependency — no PEP 621 equivalent.</li>
-<li><strong><code>source</code> per dependency</strong> — association of a specific dep with a specific index is lost.</li>
-<li><strong><code>packages</code> / <code>include</code> / <code>exclude</code></strong> — build-backend-specific config, not portable.</li>
-<li><strong>Platform markers</strong> — <code>python</code> markers on deps (e.g., <code>{version = "^1.0", python = "^3.8"}</code>) are not converted.</li>
+<li><strong><code>packages</code></strong> — build-backend-specific config, not portable (warning emitted).</li>
+<li><strong><code>include</code> / <code>exclude</code></strong> — preserved under <code>[tool.poetry]</code> for poetry2 target; dropped for uv target.</li>
+<li><strong><code>package-mode = false</code></strong> — preserved for poetry2; for uv, a warning is emitted (remove <code>[build-system]</code> manually or set <code>[tool.uv] package = false</code> in uv 0.5+).</li>
+<li><strong>URL deps</strong> (<code>{url = "..."}</code>) — not converted.</li>
+<li><strong>Platform / Python markers per dep</strong> (<code>{version = "^1.0", python = "^3.8"}</code>, <code>markers = "..."</code>) — not converted.</li>
 <li><strong>OR constraints</strong> (version lists like <code>["^1.0", "^2.0"]</code>) — PEP 440 has no OR; converted to AND with a stderr warning.</li>
+<li><strong>Platform markers</strong> — <code>python</code> markers on deps (e.g., <code>{version = "^1.0", python = "^3.8"}</code>) are not converted.</li>
 <li><strong>Lockfile</strong> — <code>poetry.lock</code> is not migrated. Run <code>uv lock</code> or <code>poetry lock</code> after conversion.</li>
 <li><strong>Comments</strong> — TOML comments from the original file are not preserved (inherent to parse/serialize).</li>
 </ul>
@@ -707,6 +770,11 @@
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># 4. Verify</span>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import my_package&quot;</span>
 </code></pre></div>
+<h2 id="full-project-migration">Full Project Migration</h2>
+<p>This mold only rewrites <code>pyproject.toml</code>. A complete Poetry → uv migration often
+involves more: converting to src-layout, patching the <code>Dockerfile</code>, and updating
+CI. See <a href=".././MIGRATE_FULL_PROMPT/"><code>MIGRATE_FULL_PROMPT.md</code></a> — a workflow prompt
+you can feed to an LLM agent to drive the full migration end-to-end.</p>
 
 
 
@@ -771,7 +839,7 @@
       <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["navigation.sections","navigation.top","content.code.copy","content.tabs.link","search.highlight","search.suggest","navigation.footer"],"search":"../../assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.91a19a9e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.63456bd9.min.js"></script>
       
     
   </body>
