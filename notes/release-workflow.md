@@ -74,6 +74,19 @@ At release time, `notes/release-vX.Y.Z.md` is transformed into a CHANGELOG secti
 
 Users care about what changed in *the mold they use*. `### dockerfile` and `### poetry_migrate` subsections are more useful than a global `### Features` / `### Bug Fixes` split. Meta sections: `### Tooling` (CI, pre-commit), `### Docs` (non-mold docs), `### Other` (license, meta).
 
+### Editorial highlights (optional)
+
+Alongside per-mold bullets, `notes/release-vX.Y.Z.md` may include a top-level `## Highlights` section — short editorial prose (emojis allowed) capturing *what matters* in the release. Example:
+
+```markdown
+## Highlights
+
+- 🏗️ **Dockerfile hooks restructured** — explicit `builder` / `runtime` stages with 6 injection points.
+- 📦 **Poetry → uv enriched** — PEP 508 markers, multi-constraints, URL / git deps.
+```
+
+Phase 2 extracts this block and injects it as a `### Highlights` subsection placed first in the `## X.Y.Z` CHANGELOG entry, before the per-mold subsections. The GitHub Release notes (optional step 2.10) receive the same content.
+
 ---
 
 ## Release cycle
@@ -95,7 +108,7 @@ Users care about what changed in *the mold they use*. `### dockerfile` and `### 
 1. Switch to `main`, `git pull --ff-only` (linear history required).
 2. Verify working tree clean.
 3. Analyze commits since last stable tag; determine bump (patch/minor/major per rules above).
-4. Consume `notes/release-vX.Y.Z.md` into a CHANGELOG section inserted at the top (after `# Changelog`).
+4. Consume `notes/release-vX.Y.Z.md` into a CHANGELOG section inserted at the top (after `# Changelog`). If the notes contain a `## Highlights` block, place it first as a `### Highlights` subsection.
 5. If any mold was modified since the last release, ensure `molds/catalog.toml` is up to date.
 6. Stage EXACTLY these files:
    - `CHANGELOG.md` (modified)
