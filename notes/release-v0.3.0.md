@@ -29,6 +29,10 @@
 - Warnings on `allow-prereleases` and `package-mode = false` (uv target).
 - New `MIGRATE_FULL_PROMPT.md` — workflow prompt for full project migrations (src-layout, Dockerfile, CI).
 
+## Docs
+
+- Add `notes/release-workflow.md` — reference documentation for the Fimod-Powered release cycle (phases, invariants, prerelease rc.N convention).
+
 ## Other
 
 - Fix over-quoted arg descriptions in `molds/catalog.toml`.
