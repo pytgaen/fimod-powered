@@ -1,0 +1,19 @@
+[project]
+name = "my_package"
+version = "0.1.0"
+description = "Per-dep markers"
+dependencies = [
+    "backports-zoneinfo>=0.2.0,<0.3.0; python_version < '3.9'",
+    "combo>=2.0.0,<3.0.0; python_version >= '3.10' and sys_platform == 'linux'",
+    "custom>=1.0.0,<2.0.0; (implementation_name == 'cpython')",
+    "pywin32>=306.0.0,<307.0.0; sys_platform == 'win32'",
+]
+requires-python = ">=3.9,<4.0"
+
+[[project.authors]]
+name = "Dev"
+email = "dev@example.com"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

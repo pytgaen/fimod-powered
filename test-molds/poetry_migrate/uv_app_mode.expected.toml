@@ -1,7 +1,7 @@
 [project]
-name = "my_package"
+name = "my_app"
 version = "1.0.0"
-description = "Test secondary source"
+description = "Application mode warning"
 dependencies = ["requests>=2.28.0,<3.0.0"]
 requires-python = ">=3.9,<4.0"
 
@@ -12,7 +12,3 @@ email = "dev@example.com"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[[tool.uv.index]]
-name = "private"
-url = "https://pypi.example.com/simple/"

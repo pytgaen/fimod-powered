@@ -1,0 +1,28 @@
+[project]
+name = "my_package"
+version = "1.0.0"
+description = "Preserve sources on poetry2 target"
+dependencies = ["requests>=2.28.0,<3.0.0"]
+requires-python = ">=3.9,<4.0"
+
+[[project.authors]]
+name = "Dev"
+email = "dev@example.com"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+include = ["my_package/py.typed"]
+package-mode = false
+
+[[tool.poetry.source]]
+name = "private"
+url = "https://pypi.example.com/simple/"
+priority = "supplemental"
+
+[[tool.poetry.source]]
+name = "legacy"
+url = "https://legacy.example.com/simple/"
+priority = "default"

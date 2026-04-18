@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "my_package"
+version = "0.1.0"
+description = "Poetry 1.2+ group.main merges with top-level deps"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.28"
+
+[tool.poetry.group.main.dependencies]
+click = "^8.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"

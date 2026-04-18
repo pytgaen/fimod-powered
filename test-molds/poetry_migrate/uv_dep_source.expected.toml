@@ -1,0 +1,31 @@
+[project]
+name = "my_package"
+version = "1.0.0"
+description = "Per-dep source + git subdirectory"
+dependencies = [
+    "internal-lib>=1.0.0,<2.0.0",
+    "my-sub",
+    "requests>=2.28.0,<3.0.0",
+]
+requires-python = ">=3.9,<4.0"
+
+[[project.authors]]
+name = "Dev"
+email = "dev@example.com"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[[tool.uv.index]]
+name = "private"
+url = "https://pypi.example.com/simple/"
+explicit = true
+
+[tool.uv.sources.internal-lib]
+index = "private"
+
+[tool.uv.sources.my-sub]
+git = "https://github.com/org/repo.git"
+tag = "v1.0"
+subdirectory = "packages/sub"

@@ -1,0 +1,21 @@
+{
+  "package_manager": "poetry",
+  "multistage": true,
+  "pipefail": true,
+  "builder_build_args": ["PYPI_USERNAME", "PYPI_PASSWORD"],
+  "extra_instructions": {
+    "builder": {
+      "before_install_pkgmgr": [
+        "ENV POETRY_HTTP_BASIC_PRIVATE_USERNAME=\"${PYPI_USERNAME}\"",
+        "ENV POETRY_HTTP_BASIC_PRIVATE_PASSWORD=\"${PYPI_PASSWORD}\""
+      ],
+      "before_install_deps": [
+        "RUN poetry config http-basic.private \"${PYPI_USERNAME}\" \"${PYPI_PASSWORD}\""
+      ],
+      "finalize": [
+        "RUN poetry run python -c \"import app; app.precompile()\""
+      ]
+    }
+  },
+  "cmd": ["python", "-m", "app"]
+}

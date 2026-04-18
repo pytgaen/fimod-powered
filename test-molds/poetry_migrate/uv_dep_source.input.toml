@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "my_package"
+version = "1.0.0"
+description = "Per-dep source + git subdirectory"
+authors = ["Dev <dev@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+requests = "^2.28"
+internal-lib = {version = "^1.0", source = "private"}
+my-sub = {git = "https://github.com/org/repo.git", tag = "v1.0", subdirectory = "packages/sub"}
+
+[[tool.poetry.source]]
+name = "private"
+url = "https://pypi.example.com/simple/"
+priority = "explicit"
