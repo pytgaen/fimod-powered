@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.0 — 2026-04-29
+
+### Highlights
+
+- 🔍 **SBOM-scannable runtime images** — multistage builds now embed the manifest (`pyproject.toml` / `package.json`) and lockfile in the final image, so `syft`, `trivy`, `grype` can produce an accurate bill of materials by scanning the deployed image — without access to the build context.
+
+### dockerfile
+
+- Multistage runtime stage `COPY --from=builder` the manifest and lockfile, making images SBOM-scannable.
+- New `MANIFEST_FILES` table per package manager; template uses a unified `manifest_files | join(' ')` across all pms.
+- New `multistage_yarn` fixture; refresh existing multistage fixtures.
+- `CONVERT_PROMPT.md`: pre-conversion check that cross-references the project manifest with the Dockerfile (Dockerfiles often lag behind a Poetry → uv migration — trust the manifest).
+
+### poetry_migrate
+
+- `MIGRATE_FULL_PROMPT.md`: explicit flat-vs-src layout decision (Step 3a/3b/3c) — converting is framed as an orthogonal choice with a wheel-install smoke test to detect shadowing.
+- `MIGRATE_FULL_PROMPT.md`: Path A (quick patch) vs Path B (regenerate via `dockerfile` mold) for Dockerfile migration.
+
 ## 0.3.0 — 2026-04-18
 
 ### Highlights
