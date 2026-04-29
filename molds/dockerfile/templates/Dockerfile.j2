@@ -56,7 +56,7 @@ WORKDIR {{ workdir }}
 {{ instruction }}
 {% endfor %}
 {% endif %}
-COPY pyproject.toml uv.lock* ./
+COPY {{ manifest_files | join(' ') }} ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY . .
@@ -69,7 +69,7 @@ RUN uv sync --frozen --no-dev
 {{ instruction }}
 {% endfor %}
 {% endif %}
-COPY pyproject.toml poetry.lock* ./
+COPY {{ manifest_files | join(' ') }} ./
 RUN poetry config virtualenvs.in-project true \
  && poetry install --only main --no-interaction --no-ansi
 
@@ -83,7 +83,7 @@ ENV PATH="{{ workdir }}/.venv/bin:$PATH"
 {{ instruction }}
 {% endfor %}
 {% endif %}
-COPY requirements*.txt ./
+COPY {{ manifest_files | join(' ') }} ./
 RUN pip install --no-cache-dir -r requirements.txt
 {% elif package_manager == "npm" %}
 {% if builder_hooks.before_install_deps %}
@@ -93,7 +93,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 {% endfor %}
 {% endif %}
 
-COPY package.json package-lock.json* ./
+COPY {{ manifest_files | join(' ') }} ./
 RUN npm ci --omit=dev
 {% elif package_manager == "yarn" %}
 
@@ -103,7 +103,7 @@ RUN corepack enable
 {{ instruction }}
 {% endfor %}
 {% endif %}
-COPY package.json yarn.lock* ./
+COPY {{ manifest_files | join(' ') }} ./
 RUN yarn install --frozen-lockfile --production
 {% elif package_manager == "pnpm" %}
 
@@ -113,7 +113,7 @@ RUN corepack enable
 {{ instruction }}
 {% endfor %}
 {% endif %}
-COPY package.json pnpm-lock.yaml* ./
+COPY {{ manifest_files | join(' ') }} ./
 RUN pnpm install --frozen-lockfile --prod
 {% endif %}
 
@@ -174,33 +174,32 @@ ENV PATH="{{ workdir }}/.venv/bin:$PATH"
 
 COPY --from=builder {{ workdir }}/node_modules {{ workdir }}/node_modules
 {% endif %}
+
+COPY --from=builder{% for f in manifest_files %} {{ workdir }}/{{ f }}{% endfor %} {{ workdir }}/
 {% else %}
 {% if package_manager == "uv" %}
 {{ install_uv(uv_version, uv_install) }}
-COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen --no-dev --no-install-project
 {% elif package_manager == "poetry" %}
 {{ install_poetry(poetry_version, poetry_install) }}
-COPY pyproject.toml poetry.lock* ./
+{% elif package_manager in ("yarn", "pnpm") %}
+
+RUN corepack enable
+{% elif package_manager in ("pip", "npm") %}
+
+{% endif %}
+COPY {{ manifest_files | join(' ') }} ./
+{% if package_manager == "uv" %}
+RUN uv sync --frozen --no-dev --no-install-project
+{% elif package_manager == "poetry" %}
 RUN poetry config virtualenvs.create false \
  && poetry install --only main --no-interaction --no-ansi
 {% elif package_manager == "pip" %}
-
-COPY requirements*.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 {% elif package_manager == "npm" %}
-
-COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 {% elif package_manager == "yarn" %}
-
-RUN corepack enable
-COPY package.json yarn.lock* ./
 RUN yarn install --frozen-lockfile --production
 {% elif package_manager == "pnpm" %}
-
-RUN corepack enable
-COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile --prod
 {% endif %}
 {% endif %}

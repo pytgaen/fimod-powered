@@ -72,9 +72,57 @@ Prefer the `cp` shorthand over raw `"COPY ..."` strings: it's shorter, avoids th
 **Private / mirror base images**
 If the original Dockerfile uses a private or mirror registry image (e.g. `dockerproxy.mycorp/python:3.13-slim`, `internal-mirror.corp/node:22`), **preserve it as-is** in `base_image`. Do not replace it with the upstream default — the mirror is usually mandatory in the user's environment (corporate proxy, air-gapped build, compliance). Do not set `base_image` only when the Dockerfile uses the canonical default (`python:3.12-slim` or `node:22-slim`).
 
+## Pre-conversion check: manifest coherence
+
+Before mapping the Dockerfile, read the project's manifest sitting next to it
+(`pyproject.toml` for Python, `package.json` for Node.js). **The manifest is
+the source of truth** — Dockerfiles often lag behind manifest migrations
+(typical case: `pyproject.toml` migrated Poetry → uv, but the Dockerfile
+still bootstraps Poetry).
+
+Cross-check three things:
+
+1. **Package manager.** Determine the manifest's actual pm:
+   - `pyproject.toml` has `[tool.poetry]` → **poetry**.
+   - `pyproject.toml` has no `[tool.poetry]` and a `uv.lock` exists → **uv**.
+   - `pyproject.toml` has no `[tool.poetry]`, no `uv.lock`, but a
+     `requirements.txt` is next to it → **pip**.
+   - `package.json` + `package-lock.json` → **npm**; `+ yarn.lock` → **yarn**;
+     `+ pnpm-lock.yaml` → **pnpm**.
+
+   If the Dockerfile's install commands disagree, **trust the manifest** for
+   `package_manager` and flag the divergence in a top-of-file YAML comment.
+
+2. **Lockfile.** Dockerfile `COPY poetry.lock` but repo has `uv.lock` (or
+   vice-versa)? Same rule — align on the manifest, drop the stale lockfile
+   reference.
+
+3. **Python version.** `requires-python` (or `[tool.poetry.dependencies]
+   python`) vs Dockerfile's `FROM python:X.Y`. If they differ, prefer the
+   manifest's version in `base_image` and flag.
+
+If any divergence is found, **briefly tell the user before producing the
+descriptor** so they can confirm the alignment direction:
+
+> *"Dockerfile bootstraps poetry but `pyproject.toml` has no `[tool.poetry]`
+> and `uv.lock` is present — I'll align the descriptor on uv. OK?"*
+
+Then proceed with the descriptor reflecting the manifest.
+
+**If no manifest is provided** (you only have the Dockerfile): proceed using
+the Dockerfile's signals, and add a top-of-file YAML comment:
+
+```yaml
+# NOTE: manifest not provided; descriptor inferred from Dockerfile alone —
+# verify package_manager matches the actual project state.
+```
+
 ## Conversion rules
 
-1. **Identify the package manager** from the Dockerfile:
+1. **Identify the package manager** primarily from the manifest (see
+   *Pre-conversion check*). The Dockerfile signals below are fallbacks,
+   used only when no manifest is available or to confirm the manifest's
+   pm matches the Dockerfile's intent:
    - `requirements.txt` / `pip install -r` → `pip`
    - `pyproject.toml` + `poetry` → `poetry`
    - `pyproject.toml` + `uv` → `uv`
@@ -152,16 +200,18 @@ If the original Dockerfile uses a private or mirror registry image (e.g. `docker
     - Do not invent hooks or fields that don't exist. Never silently omit critical behavior.
 
 11. **Ignore generated patterns** — skip instructions that the mold generates automatically:
-   - `RUN groupadd ... && useradd ...` (generated from `user`)
-   - `WORKDIR /app` (default)
-   - `COPY pyproject.toml ...`, `COPY requirements*.txt ...`, `COPY package.json ...` (generated from `package_manager`)
-   - `RUN poetry config virtualenvs...` (generated)
-   - `RUN uv sync ...` (generated)
-   - `ENV PATH=".../\.venv/bin:$PATH"` in multistage runtime (generated)
+    - `RUN groupadd ... && useradd ...` (generated from `user`)
+    - `WORKDIR /app` (default)
+    - `COPY pyproject.toml ...`, `COPY requirements*.txt ...`, `COPY package.json ...` (generated from `package_manager`)
+    - `RUN poetry config virtualenvs...` (generated)
+    - `RUN uv sync ...` (generated)
+    - `ENV PATH=".../\.venv/bin:$PATH"` in multistage runtime (generated)
 
-## Example conversion
+## Examples
 
-### Input Dockerfile
+### Example 1 — Multistage uv build with healthcheck
+
+#### Input Dockerfile
 
 ```dockerfile
 FROM python:3.12-slim AS builder
@@ -213,7 +263,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0"]
 ```
 
-### Output descriptor
+#### Output descriptor
 
 ```yaml
 package_manager: uv
@@ -244,7 +294,7 @@ cmd: ["uvicorn", "main:app", "--host", "0.0.0.0"]
 
 ### Example 2 — Private PyPI with Poetry
 
-### Input Dockerfile
+#### Input Dockerfile
 
 ```dockerfile
 FROM python:3.13-slim AS base
@@ -283,7 +333,7 @@ COPY install/ /install/
 CMD ["python"]
 ```
 
-### Output descriptor
+#### Output descriptor
 
 ```yaml
 package_manager: poetry
