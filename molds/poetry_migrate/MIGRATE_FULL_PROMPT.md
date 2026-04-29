@@ -62,12 +62,82 @@ user before continuing.
 
 ---
 
-### Step 3 — Convert to src-layout (if currently flat)
+### Step 3 — Source layout: decide, then act
 
-Skip this step if the project already uses `src/`.
+`uv init --package` defaults to src-layout, but hatchling (and most modern
+backends) supports **both flat and src layouts equally well**. Converting is
+**not** a prerequisite of the Poetry→uv migration — it's an orthogonal project
+convention choice. Make the decision explicitly before doing anything.
 
-`uv init --package` defaults to src-layout and it's the modern convention.
-Converting is low-risk but touches many files.
+#### Step 3a — Decide
+
+Reasons to convert to `src/`:
+- Greenfield-ish project where modern conventions matter.
+- You want test runs to fail loudly if the package isn't installed (anti-shadowing).
+- Build backend struggles with auto-detection in flat (e.g. namespace package, mismatched names).
+
+Reasons to stay flat:
+- Many hardcoded references to `{pkg_name}/` in CI, `Makefile`, docs, `MANIFEST.in` (high churn).
+- Project is published, stable, and downstream tooling expects the current layout.
+- Namespace package (PEP 420, multi-repo) already wired up.
+
+**To check whether shadowing is masking real bugs** (the strongest technical
+argument for `src/`), run the wheel-install smoke test from outside the repo:
+```bash
+uv build --wheel
+uv pip install --force-reinstall dist/*.whl
+cd /tmp && uv run --no-project python -c "import {pkg_name}; print({pkg_name}.__file__)"
+```
+If the printed path is inside the repo (not `.venv/`), or imports break when
+run from `/tmp`, the flat layout is hiding packaging bugs — convert to `src/`.
+
+**Output of Step 3a:** state the choice (stay flat / convert) and the reason.
+Ask the user to confirm before continuing.
+
+#### Step 3b — Path A: Stay flat (audit hatchling)
+
+Hatchling auto-detects a package matching the normalized project name
+(`name = "my-tool"` → looks for `my_tool/`). If your project fits that mold,
+nothing to configure. Otherwise, watch for these pitfalls:
+
+1. **Directory name doesn't match `name`** (e.g. `name = "mytool"` but folder
+   `MyTool/`): add explicit packages.
+   ```toml
+   [tool.hatch.build.targets.wheel]
+   packages = ["MyTool"]
+   ```
+
+2. **Wheel pollution**: in flat layout, hatchling can sweep up `tests/`,
+   `examples/`, `scripts/`, `docs/` if auto-detection misfires. Verify with:
+   ```bash
+   uv build --wheel
+   python -m zipfile -l dist/*.whl
+   ```
+   If unwanted directories appear, pin packages explicitly (as above) or
+   exclude them:
+   ```toml
+   [tool.hatch.build.targets.wheel]
+   packages = ["{pkg_name}"]
+   exclude = ["tests", "examples", "scripts"]
+   ```
+
+3. **Namespace packages (PEP 420, no `__init__.py`)**: not auto-detected.
+   Declare them:
+   ```toml
+   [tool.hatch.build.targets.wheel]
+   packages = ["myorg/sub_namespace"]
+   ```
+
+4. **Single top-level module** (`mymod.py` file, no package directory):
+   ```toml
+   [tool.hatch.build.targets.wheel]
+   only-include = ["mymod.py"]
+   ```
+
+5. **Tool configs that assume src-layout**: remove or adjust if present —
+   `[tool.ruff] src = ["src", "tests"]`, `pythonpath = ["src"]`, etc.
+
+#### Step 3c — Path B: Convert to src-layout
 
 1. Move the package:
    ```bash
@@ -75,7 +145,8 @@ Converting is low-risk but touches many files.
    git mv {pkg_name} src/{pkg_name}
    ```
 2. Update the build backend config in `pyproject.toml`:
-   - **hatchling** (default):
+   - **hatchling** (default): usually auto-detects `src/{pkg_name}` when the
+     name matches. To be explicit:
      ```toml
      [tool.hatch.build.targets.wheel]
      packages = ["src/{pkg_name}"]
@@ -85,7 +156,7 @@ Converting is low-risk but touches many files.
      [tool.setuptools.packages.find]
      where = ["src"]
      ```
-   - **flit**: add `[tool.flit.module] name = "{pkg_name}"` (flit auto-detects `src/`).
+   - **flit**: add `[tool.flit.module] name = "{pkg_name}"` (auto-detects `src/`).
    - **pdm**: `[tool.pdm.build] package-dir = "src"`.
    - **uv-build**: auto-detects `src/{pkg_name}`, no config needed.
 3. Update tool configs that reference the old path:
@@ -108,39 +179,86 @@ Converting is low-risk but touches many files.
 Only if a `Dockerfile` exists at the repo root (or in common locations:
 `docker/`, `deploy/`).
 
-1. Parse the Dockerfile. Identify every `COPY` / `ADD` that references:
+#### Step 4a — Decide
+
+Default recommendation: **Path B (regenerate via `molds/dockerfile`)** — you
+get a canonical, normalized 2-stage uv build. **Switch the recommendation to
+Path A** if the existing Dockerfile shows any of these signals (the mold's
+field set can't preserve them faithfully):
+
+- `RUN --mount=type=secret` or `RUN --mount=type=cache` (BuildKit features).
+- `ADD <url>`, `ADD <tar>`, or multi-source `COPY a b c /dest/`.
+- 3+ build stages where intermediate stages produce artifacts consumed at
+  runtime (not just test/lint).
+- Heavy native compilation (Rust extensions, C deps with custom flags) tied
+  to a precise step order.
+- Internal pre-baked base image (org-hardened) where regenerating apt-get /
+  user creation would be redundant or forbidden.
+- Multi-arch / cross-compilation logic (`BUILDPLATFORM`/`TARGETPLATFORM`).
+
+If any apply → recommend Path A and explain which signal triggered it.
+Otherwise → recommend Path B.
+
+**Ask the user explicitly** before doing anything:
+
+> *"Do you want to migrate the Dockerfile now?*
+> *— **Path A** (quick patch): keep the current shape, swap `poetry install` → `uv sync`, fix COPY paths.*
+> *— **Path B** (default; regenerate via `dockerfile` mold): canonical 2-stage uv build from a YAML descriptor.*
+> *— **Defer**: leave the Dockerfile alone for now."*
+
+If deferred → skip to Step 5 and list the Dockerfile in the final report's
+*Manual review required* section.
+
+#### Step 4b — Path A: Quick patch
+
+1. Parse the Dockerfile. Identify every `COPY` / `ADD` referencing:
    - `pyproject.toml`, `poetry.lock` → replace `poetry.lock` with `uv.lock`.
    - The package directory (`COPY {pkg_name}/ ...` or `COPY . .`).
 2. Identify the install command:
-   - `poetry install [--no-dev|--only main]` → replace with `uv sync --frozen [--no-dev]`.
-   - `pip install poetry && poetry install` → replace the poetry bootstrap with
-     a uv install (see below).
-3. Propose the patched Dockerfile. Two idiomatic shapes:
-
-   **Option A — minimal patch (keep existing base image):**
+   - `poetry install [--no-dev|--only main]` → `uv sync --frozen [--no-dev]`.
+   - `pip install poetry && poetry install` → drop the poetry bootstrap, install uv as below.
+3. Propose the patched Dockerfile:
    ```dockerfile
-   # Install uv (replaces poetry bootstrap)
    COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
    COPY pyproject.toml uv.lock ./
-   COPY src/ ./src/           # was: COPY {pkg_name}/ ./{pkg_name}/
+   COPY src/ ./src/           # was: COPY {pkg_name}/ ./{pkg_name}/  (adjust if Step 3 kept flat)
    RUN uv sync --frozen --no-dev
    ```
+4. Update `.dockerignore`: add `.venv/`, keep `uv.lock` (don't ignore), remove Poetry-specific entries.
+5. Multi-stage builds: copy `uv.lock` and `pyproject.toml` *before* the source tree to maximize layer cache reuse.
 
-   **Option B — regenerate via `dockerfile` mold:** if the project has (or can
-   produce) a JSON/YAML descriptor, run:
+**Do not write the Dockerfile yet.** Show the diff, let the user approve, then write.
+
+#### Step 4c — Path B: Regenerate via `molds/dockerfile`
+
+The `dockerfile` mold ships a dedicated conversion prompt that turns an
+existing Dockerfile into a YAML descriptor, then regenerates a canonical
+multistage uv build.
+
+1. **Convert Dockerfile → descriptor.** Hand the existing Dockerfile to the
+   conversion prompt at `molds/dockerfile/CONVERT_PROMPT.md`. It produces a
+   YAML descriptor with normalized stages, `package_manager: uv`,
+   healthcheck/user/expose extracted, etc. Save it as `container.yaml`.
+
+2. **Regenerate the Dockerfile from the descriptor:**
    ```bash
-   fimod s -i descriptor.json -m @dockerfile -o Dockerfile
+   fimod s -i container.yaml -m @dockerfile -o Dockerfile.new
    ```
 
-4. Update `.dockerignore`: add `.venv/`, `uv.lock` is usually kept (not ignored),
-   remove any Poetry-specific entries.
-5. Flag to the user: multi-stage builds usually benefit from copying `uv.lock`
-   and `pyproject.toml` *before* the source tree to maximize layer cache reuse.
-   Preserve that ordering.
+3. **Diff `Dockerfile.new` vs `Dockerfile`** and surface every divergence to
+   the user — especially:
+   - Intermediate stages dropped (test/lint → fine; real build stage → flag).
+   - System packages added or removed.
+   - Healthcheck / non-root user / `EXPOSE` changes.
+   - Private-registry credentials handling (ARG/ENV placement may differ).
 
-**Do not write the Dockerfile yet.** Show the diff, let the user approve, then
-write.
+4. On approval: replace `Dockerfile` with `Dockerfile.new`. Ask the user
+   whether they want to **commit `container.yaml` alongside** — useful if they
+   plan to re-run the mold later when bumping uv versions or base images.
+   Otherwise it can be discarded.
+
+5. Update `.dockerignore` (same as Path A step 4).
 
 ---
 
@@ -196,8 +314,8 @@ At the end of the run, produce a summary:
 Migration summary
 ─────────────────
  pyproject.toml:  migrated (target=uv, build=hatchling)
- Layout:          flat → src/  ({pkg_name}/ → src/{pkg_name}/)
- Dockerfile:      patched (install command + COPY paths)
+ Layout:          flat (kept) | flat → src/ ({pkg_name}/ → src/{pkg_name}/)
+ Dockerfile:      patched (Path A) | regenerated via dockerfile mold (Path B) | deferred
  CI:              .github/workflows/test.yml updated
  Lockfile:        uv.lock regenerated, poetry.lock deleted
  Validation:      uv sync OK, pytest OK (42 passed), docker build OK

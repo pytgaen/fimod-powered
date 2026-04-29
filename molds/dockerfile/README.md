@@ -248,6 +248,8 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
+COPY --from=builder /app/pyproject.toml /app/uv.lock* /app/
+
 COPY --chown=app:app . .
 
 EXPOSE 8000
@@ -256,6 +258,8 @@ USER app
 
 CMD ["uvicorn","main:app","--host","0.0.0.0"]
 ```
+
+> **SBOM-friendly:** in multistage mode the lockfile (`uv.lock`, `poetry.lock`, `requirements*.txt`, `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`) and the manifest (`pyproject.toml` / `package.json`) are explicitly copied from the builder into the final image. SBOM tools (`syft`, `trivy`, `grype`) can scan the runtime image and produce an accurate bill of materials with pinned versions and hashes — without needing access to the build context.
 
 ### Minimal (auto-detected)
 

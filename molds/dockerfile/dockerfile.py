@@ -23,6 +23,15 @@ DEFAULT_IMAGES = {
     "pnpm": "node:22-slim",
 }
 
+MANIFEST_FILES = {
+    "pip": ["requirements*.txt"],
+    "poetry": ["pyproject.toml", "poetry.lock*"],
+    "uv": ["pyproject.toml", "uv.lock*"],
+    "npm": ["package.json", "package-lock.json*"],
+    "yarn": ["package.json", "yarn.lock*"],
+    "pnpm": ["package.json", "pnpm-lock.yaml*"],
+}
+
 BUILDER_HOOKS = ["before_install_pkgmgr", "before_install_deps", "finalize"]
 RUNTIME_HOOKS = ["after_os_update", "after_deps_install", "finalize"]
 
@@ -83,6 +92,7 @@ def transform(data, args, **_):
         data["workdir"] = "/app"
 
     data["package_manager"] = pm
+    data["manifest_files"] = MANIFEST_FILES[pm]
     data["is_python"] = pm in PYTHON_MANAGERS
     data["is_node"] = pm in NODE_MANAGERS
     data["multistage"] = data.get("multistage", False)

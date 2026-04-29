@@ -16,6 +16,7 @@ jobs:
         run: curl -fsSL https://raw.githubusercontent.com/pytgaen/fimod/main/install.sh | sh
         env:
           FIMOD_SETUP_REGISTRY: "no"
+          FIMOD_SETUP_SANDBOX: "yes"
 
       - name: Run fixture tests
         run: |
@@ -36,6 +37,7 @@ jobs:
         run: curl -fsSL https://raw.githubusercontent.com/pytgaen/fimod/main/install.sh | sh
         env:
           FIMOD_SETUP_REGISTRY: "no"
+          FIMOD_SETUP_SANDBOX: "yes"
 
       - uses: astral-sh/setup-uv@v4
 
@@ -56,6 +58,7 @@ jobs:
         run: curl -fsSL https://raw.githubusercontent.com/pytgaen/fimod/main/install.sh | sh
         env:
           FIMOD_SETUP_REGISTRY: "no"
+          FIMOD_SETUP_SANDBOX: "yes"
 
       - name: Rebuild catalog
         run: fimod registry build-catalog ./molds

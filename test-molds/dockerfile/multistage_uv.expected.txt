@@ -21,6 +21,8 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
+COPY --from=builder /app/pyproject.toml /app/uv.lock* /app/
+
 COPY --chown=app:app . .
 
 EXPOSE 8000
