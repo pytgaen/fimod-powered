@@ -119,16 +119,11 @@ the Dockerfile's signals, and add a top-of-file YAML comment:
 
 ## Conversion rules
 
-1. **Identify the package manager** primarily from the manifest (see
-   *Pre-conversion check*). The Dockerfile signals below are fallbacks,
-   used only when no manifest is available or to confirm the manifest's
-   pm matches the Dockerfile's intent:
-   - `requirements.txt` / `pip install -r` → `pip`
-   - `pyproject.toml` + `poetry` → `poetry`
-   - `pyproject.toml` + `uv` → `uv`
-   - `package.json` + `npm ci` → `npm`
-   - `package.json` + `yarn` → `yarn`
-   - `package.json` + `pnpm` → `pnpm`
+1. **Identify the package manager** from the manifest (see *Pre-conversion check*). Use Dockerfile signals only as fallback when no manifest is available:
+   - `pip install -r requirements.txt` → `pip`
+   - `pip install poetry` / `curl install.python-poetry.org` → `poetry`
+   - `COPY --from=ghcr.io/astral-sh/uv` / `curl astral.sh/uv` → `uv`
+   - `npm ci` → `npm`; `yarn` → `yarn`; `pnpm` → `pnpm`
 
 2. **Detect multistage**: if there are multiple `FROM` instructions, set `multistage: true`.
 
@@ -159,16 +154,13 @@ the Dockerfile's signals, and add a top-of-file YAML comment:
 
    Builder stage (`extra_instructions.builder.*`):
    - `ARG` in the builder → `builder_build_args` (dedicated field, not a hook)
-   - `ENV` for auth / config that doesn't depend on the pm binary → `before_install_pkgmgr`
-   - `RUN` commands using the pm (e.g. `poetry config`) → `before_install_deps`
-   - Pre-compilation, model downloads, build-time side effects occurring after deps install → `finalize`
+   - `ENV` / `RUN` for private registry auth → see *credentials guidance* in Hook points above
+   - Pre-compilation, model downloads, build-time side effects after deps install → `finalize`
 
    Runtime stage (`extra_instructions.runtime.*`):
    - Between `apt-get` and user creation → `after_os_update`
    - Between dependency install and `COPY . .` → `after_deps_install`
    - After `COPY . .` and before `EXPOSE`/`CMD` → `finalize`
-
-   Use the **`{cp: {src: dest}}`** form for `COPY` lines rather than raw `"COPY ..."` strings — it's shorter and auto-adds `--chown=user:user` when `user` is set.
 
 7. **Selective vs generic source copy** — by default the mold emits `COPY . .` in the runtime stage. If the original Dockerfile performs **explicit, selective** `COPY dir/` instructions and has **no** generic `COPY . .`, this is an intentional pattern (often to avoid shipping tests/docs/secrets).
    - Set `skip_copy_all: true`.
@@ -206,6 +198,25 @@ the Dockerfile's signals, and add a top-of-file YAML comment:
     - `RUN poetry config virtualenvs...` (generated)
     - `RUN uv sync ...` (generated)
     - `ENV PATH=".../\.venv/bin:$PATH"` in multistage runtime (generated)
+
+## Best practice review
+
+After producing the descriptor, check whether the following mold features are absent from the original Dockerfile. If so, mention them as optional suggestions — do not add them silently to the descriptor.
+
+| Absent from original | Suggestion |
+| :--- | :--- |
+| No non-root `USER` | `user: appname` — the mold creates the group and user automatically |
+| No `HEALTHCHECK` | `healthcheck:` — available if the service exposes a health endpoint |
+| `RUN` pipes without `set -o pipefail` | `pipefail: true` — makes the build fail on silent pipe errors |
+
+Present suggestions after the descriptor, in a clearly labelled block:
+
+```
+# Suggested improvements (optional — the mold supports these natively):
+# - user: app         → runs as non-root; group and useradd generated automatically
+# - healthcheck: ...  → add if your service exposes a /health endpoint
+# - pipefail: true    → recommended when RUN uses pipes
+```
 
 ## Examples
 
@@ -366,4 +377,6 @@ Note how the `poetry export` + `pip wheel` + `pip install --no-index` pipeline f
 
 ## Output format
 
-Return **only** the YAML descriptor inside a fenced code block. Add a brief comment for any `extra_instructions` entry explaining what the original instruction did. If rule 8 normalization dropped an intermediate stage, or rule 10 flagged a hard limit, add a top-of-file comment summarizing what was normalized away or approximated — so the user can verify the simplification is safe.
+Return the YAML descriptor inside a fenced code block. Add a brief comment for any `extra_instructions` entry explaining what the original instruction did. If rule 8 normalization dropped an intermediate stage, or rule 10 flagged a hard limit, add a top-of-file comment summarizing what was normalized away or approximated.
+
+After the descriptor, append the best practice suggestions block if any apply (see *Best practice review* above). The descriptor itself must stay faithful to the original Dockerfile — never inject suggested fields silently.
