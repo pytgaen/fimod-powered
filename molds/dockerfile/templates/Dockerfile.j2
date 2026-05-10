@@ -165,6 +165,10 @@ RUN groupadd -r {{ user }} && useradd -r -g {{ user }} -d {{ workdir }} -s /sbin
 {% endif %}
 
 WORKDIR {{ workdir }}
+{% if user %}
+
+RUN chown {{ user }}:{{ user }} {{ workdir }}
+{% endif %}
 {% if multistage %}
 {% if is_python %}
 
@@ -175,7 +179,7 @@ ENV PATH="{{ workdir }}/.venv/bin:$PATH"
 COPY --from=builder {{ workdir }}/node_modules {{ workdir }}/node_modules
 {% endif %}
 
-COPY --from=builder{% for f in manifest_files %} {{ workdir }}/{{ f }}{% endfor %} {{ workdir }}/
+COPY {% if user %}--chown={{ user }}:{{ user }} {% endif %}--from=builder{% for f in manifest_files %} {{ workdir }}/{{ f }}{% endfor %} {{ workdir }}/
 {% else %}
 {% if package_manager == "uv" %}
 {{ install_uv(uv_version, uv_install) }}
@@ -187,7 +191,7 @@ RUN corepack enable
 {% elif package_manager in ("pip", "npm") %}
 
 {% endif %}
-COPY {{ manifest_files | join(' ') }} ./
+COPY {% if user %}--chown={{ user }}:{{ user }} {% endif %}{{ manifest_files | join(' ') }} ./
 {% if package_manager == "uv" %}
 RUN uv sync --frozen --no-dev --no-install-project
 {% elif package_manager == "poetry" %}

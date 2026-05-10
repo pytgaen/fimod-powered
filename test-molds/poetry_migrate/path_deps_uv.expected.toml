@@ -3,8 +3,8 @@ name = "my_package"
 version = "0.1.0"
 description = "Path dependencies for uv"
 dependencies = [
-    "my-local-lib",
     "requests>=2.28.0,<3.0.0",
+    "my-local-lib",
 ]
 requires-python = ">=3.9,<4.0"
 

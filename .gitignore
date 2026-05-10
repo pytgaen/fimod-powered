@@ -14,7 +14,8 @@ venv/
 # ─── AI / Tools ───────────────────────────────────────────
 .serena/
 .cache/
-.claude/
+.agents/
+.claude
 
 # ─── IDE & Editors ────────────────────────────────────────
 .vscode/
@@ -34,3 +35,4 @@ site/
 *.log
 
 .skylos/
+.memsearch/
