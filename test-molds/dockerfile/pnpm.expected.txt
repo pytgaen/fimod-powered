@@ -4,8 +4,10 @@ RUN groupadd -r node && useradd -r -g node -d /app -s /sbin/nologin node
 
 WORKDIR /app
 
+RUN chown node:node /app
+
 RUN corepack enable
-COPY package.json pnpm-lock.yaml* ./
+COPY --chown=node:node package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile --prod
 
 COPY --chown=node:node . .
