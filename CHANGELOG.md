@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1 — 2026-05-24
+
+### dockerfile
+
+- Fix non-root runtime images by assigning the workdir and copied manifests to the configured application user.
+
+### Other
+
+- Ignore local `.memsearch/` artifacts.
+
 ## 0.4.0 — 2026-04-29
 
 ### Highlights
