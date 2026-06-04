@@ -57,7 +57,7 @@ fimod s -i pyproject.toml -m @poetry_migrate [--arg target=uv] [--arg build=uv] 
 Read stderr warnings and surface them to the user. If the output looks good, write in place:
 
 ```bash
-fimod s -i pyproject.toml -m @poetry_migrate [options] -o pyproject.toml -i
+fimod s -i pyproject.toml -m @poetry_migrate [options] -o pyproject.toml
 ```
 
 ---

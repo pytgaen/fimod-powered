@@ -4,16 +4,16 @@ Migrate a Poetry `pyproject.toml` to **Poetry 2** or **uv** format, with full PE
 
 ```bash
 # Poetry 1 → Poetry 2 (default)
-fimod s -i pyproject.toml -m @poetry_migrate -o pyproject.toml -i
+fimod s -i pyproject.toml -m @poetry_migrate -o pyproject.toml
 
 # Poetry → uv (hatchling backend)
-fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv -o pyproject.toml -i
+fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv -o pyproject.toml
 
 # Poetry → uv (setuptools backend)
-fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv --arg build=setuptools -o pyproject.toml -i
+fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv --arg build=setuptools -o pyproject.toml
 
 # Poetry → uv, preserving Poetry's "search every index" semantics
-fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv --arg index_strategy=unsafe-best-match -o pyproject.toml -i
+fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv --arg index_strategy=unsafe-best-match -o pyproject.toml
 ```
 
 ## Why This Mold?
@@ -106,7 +106,7 @@ These Poetry features are not converted (manual review needed):
 fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv
 
 # 2. If it looks good, write in place
-fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv -i
+fimod s -i pyproject.toml -m @poetry_migrate --arg target=uv -o pyproject.toml
 
 # 3. Regenerate lockfile
 uv lock
