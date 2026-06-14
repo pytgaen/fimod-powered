@@ -1,0 +1,5 @@
+[args]
+current = "v0.5.0"
+output = "tag"
+
+output_format = "txt"

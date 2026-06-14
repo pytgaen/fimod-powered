@@ -21,13 +21,14 @@ Only `cmd` (or `entrypoint`) is required. Everything else has sensible defaults.
 | `base_image` | string | per manager | `python:3.12-slim` or `node:22-slim` |
 | `multistage` | bool | `false` | Two-stage build (smaller final image) |
 | `workdir` | string | `/app` | Working directory |
-| `system_packages` | list | — | APT packages to install |
+| `system_packages` | list | — | APT packages to install (Debian/Ubuntu bases only) |
 | `labels` | dict | — | Docker labels |
 | `build_args` | list | — | Build-time ARG declarations (runtime stage) |
 | `builder_build_args` | list | — | Build-time ARG declarations for the **builder** stage (private-registry credentials, etc.) |
 | `env` | dict | — | Environment variables |
 | `expose` | list | — | Ports to expose |
-| `user` | string | — | Non-root user (created automatically) |
+| `user` | string | — | Non-root user (created automatically; standard `/tmp` permissions ensured) |
+| `writable_dirs` | list | — | Runtime-writable directories owned by `user` with mode `0750` |
 | `healthcheck` | object | — | `cmd`, `interval`, `timeout`, `start_period`, `retries` |
 | `entrypoint` | list | — | Docker ENTRYPOINT |
 | `cmd` | list | — | Docker CMD |
@@ -38,6 +39,22 @@ Only `cmd` (or `entrypoint`) is required. Everything else has sensible defaults.
 | `pipefail` | bool | `false` | Add `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` |
 | `skip_copy_all` | bool | `false` | Omit the runtime `COPY . .`. Use when you want fully selective copies via `runtime.finalize` + `.dockerignore` |
 | `extra_instructions` | object | — | Custom instructions at hook points, split by stage (see below) |
+
+`system_packages` assumes an APT-based base image such as `python:*-slim`, `node:*-slim`, Debian, or Ubuntu. For Alpine, Wolfi, UBI, or other package managers, leave `system_packages` empty and use `extra_instructions.runtime.after_os_update` with the appropriate native commands.
+
+For Python images, the mold emits these runtime defaults automatically:
+
+```dockerfile
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+```
+
+If `user` is set, `writable_dirs` requires that same non-root user and creates the directories during runtime ownership setup:
+
+```dockerfile
+RUN chown app:app /app \
+ && install -d -o app -g app -m 0750 /app/data
+```
 
 ## Extra instructions
 
@@ -122,12 +139,20 @@ cmd: ["uvicorn", "main:app", "--host", "0.0.0.0"]
 ```dockerfile
 FROM python:3.12-slim
 
-RUN groupadd -r app && useradd -r -g app -d /app -s /sbin/nologin app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN mkdir -p /tmp \
+ && chmod 1777 /tmp \
+ && groupadd -r app \
+ && useradd -r -g app -d /app -s /sbin/nologin app
 
 WORKDIR /app
 
+RUN chown app:app /app
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
-COPY pyproject.toml uv.lock* ./
+COPY --chown=app:app pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY --chown=app:app . .
@@ -158,8 +183,11 @@ cmd: ["gunicorn", "app:app"]
 ```dockerfile
 FROM python:3.12-slim
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl
+    curl \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -195,12 +223,17 @@ cmd: ["node", "index.js"]
 ```dockerfile
 FROM node:22-slim
 
-RUN groupadd -r node && useradd -r -g node -d /app -s /sbin/nologin node
+RUN mkdir -p /tmp \
+ && chmod 1777 /tmp \
+ && groupadd -r node \
+ && useradd -r -g node -d /app -s /sbin/nologin node
 
 WORKDIR /app
 
+RUN chown node:node /app
+
 RUN corepack enable
-COPY package.json pnpm-lock.yaml* ./
+COPY --chown=node:node package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile --prod
 
 COPY --chown=node:node . .
@@ -241,14 +274,22 @@ RUN uv sync --frozen --no-dev
 # ── Runtime stage ────────────────────────────────────────────────
 FROM python:3.12-slim
 
-RUN groupadd -r app && useradd -r -g app -d /app -s /sbin/nologin app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN mkdir -p /tmp \
+ && chmod 1777 /tmp \
+ && groupadd -r app \
+ && useradd -r -g app -d /app -s /sbin/nologin app
 
 WORKDIR /app
+
+RUN chown app:app /app
 
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-COPY --from=builder /app/pyproject.toml /app/uv.lock* /app/
+COPY --chown=app:app --from=builder /app/pyproject.toml /app/uv.lock* /app/
 
 COPY --chown=app:app . .
 

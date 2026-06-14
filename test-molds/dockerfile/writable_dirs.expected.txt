@@ -10,7 +10,8 @@ RUN mkdir -p /tmp \
 
 WORKDIR /app
 
-RUN chown app:app /app
+RUN chown app:app /app \
+ && install -d -o app -g app -m 0750 /app/data /app/cache
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 COPY --chown=app:app pyproject.toml uv.lock* ./
@@ -20,8 +21,6 @@ COPY --chown=app:app . .
 
 RUN uv sync --frozen --no-dev
 
-EXPOSE 8000
-
 USER app
 
-CMD ["uvicorn","main:app","--host","0.0.0.0"]
+CMD ["python","-m","app"]

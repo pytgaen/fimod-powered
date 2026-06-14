@@ -145,6 +145,11 @@ LABEL {{ key }}="{{ value }}"
 ARG {{ arg }}
 {% endfor %}
 {% endif %}
+{% if is_python %}
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+{% endif %}
 {% if system_packages %}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -161,13 +166,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {% endif %}
 {% if user %}
 
-RUN groupadd -r {{ user }} && useradd -r -g {{ user }} -d {{ workdir }} -s /sbin/nologin {{ user }}
+RUN mkdir -p /tmp \
+ && chmod 1777 /tmp \
+ && groupadd -r {{ user }} \
+ && useradd -r -g {{ user }} -d {{ workdir }} -s /sbin/nologin {{ user }}
 {% endif %}
 
 WORKDIR {{ workdir }}
 {% if user %}
 
-RUN chown {{ user }}:{{ user }} {{ workdir }}
+RUN chown {{ user }}:{{ user }} {{ workdir }}{% if writable_dirs %} \
+ && install -d -o {{ user }} -g {{ user }} -m 0750{% for dir in writable_dirs %} {{ dir }}{% endfor %}{% endif %}
+
 {% endif %}
 {% if multistage %}
 {% if is_python %}

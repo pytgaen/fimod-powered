@@ -3,7 +3,7 @@ description = "Generate a production-ready Dockerfile from a JSON/YAML descripto
 path = "dockerfile/dockerfile.py"
 readme = "dockerfile/README.md"
 output_format = "txt"
-hash = "a4d2c40b57b09a7d5e3b8049e7a507a4"
+hash = "b7752c8a56e70e0ced044d85cf9388cb"
 files = [
     "dockerfile/CONVERT_PROMPT.md",
     "dockerfile/templates/Dockerfile.j2",
@@ -59,6 +59,19 @@ files = ["poetry_migrate/MIGRATE_FULL_PROMPT.md"]
 build = "Build backend for uv target: hatchling, setuptools, flit, pdm, uv (default: hatchling)"
 index_strategy = "uv index-strategy: first-index (default), unsafe-best-match, unsafe-first-match"
 target = "Migration target: poetry2 or uv (default: poetry2)"
+
+[molds.semver_bumper]
+description = "Calculate the next semantic version from commits since the last tag"
+path = "semver_bumper/semver_bumper.py"
+readme = "semver_bumper/README.md"
+output_format = "json"
+hash = "07daafe1c3d67845a5673005272bcd39"
+
+[molds.semver_bumper.args]
+current = "Current version or tag such as v0.5.0 or 0.5.0"
+on-none = "Behavior when no version-worthy commit is found: keep or fail (default: keep)"
+output = "Output mode: json/version/tag/bump (default: json)"
+tag-prefix = "Tag prefix for next_tag: auto/v/none (default: auto)"
 
 [molds.skylos_to_gitlab]
 description = "Convert Skylos dead code reports to GitLab Code Quality format"

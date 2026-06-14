@@ -103,4 +103,5 @@ Molds run in Monty's sandbox with these built-ins (no imports needed):
 | `poetry_migrate` | Migrate Poetry pyproject.toml to Poetry 2 or uv (PEP 621) |
 | `download` | Download files from URLs (wget-like, uses HTTP input format) |
 | `gh_latest` | Get latest GitHub release tag or download URL |
+| `semver_bumper` | Calculate next semantic version from commits since the last tag |
 | `skylos_to_gitlab` | Convert Skylos dead code reports to GitLab Code Quality format |

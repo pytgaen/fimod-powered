@@ -14,12 +14,13 @@ Analyze the provided Dockerfile and produce a YAML descriptor that will regenera
 | `base_image` | string | `python:3.12-slim` / `node:22-slim` | Base Docker image |
 | `multistage` | bool | `false` | Two-stage build |
 | `workdir` | string | `/app` | Working directory |
-| `system_packages` | list | — | APT packages to install |
+| `system_packages` | list | — | APT packages to install (Debian/Ubuntu bases only) |
 | `labels` | dict | — | Docker labels |
 | `build_args` | list | — | Build-time arguments |
 | `env` | dict | — | Environment variables |
 | `expose` | list | — | Ports to expose |
-| `user` | string | — | Non-root user (created automatically) |
+| `user` | string | — | Non-root user (created automatically; standard `/tmp` permissions ensured) |
+| `writable_dirs` | list | — | Runtime-writable directories owned by `user` with mode `0750` |
 | `healthcheck` | object | — | `cmd`, `interval`, `timeout`, `start_period`, `retries` |
 | `entrypoint` | list | — | Docker ENTRYPOINT |
 | `cmd` | list | — | Docker CMD |
@@ -31,6 +32,10 @@ Analyze the provided Dockerfile and produce a YAML descriptor that will regenera
 | `skip_copy_all` | bool | `false` | Omit the runtime `COPY . .`. Set to `true` when the original Dockerfile performs selective copies only |
 | `builder_build_args` | list | — | Build-time ARG declarations for the **builder** stage (e.g. private-registry credentials) |
 | `extra_instructions` | object | — | Custom instructions injected at hook points (see below) |
+
+`system_packages` is only for APT-based images (Debian/Ubuntu, including `python:*-slim` and `node:*-slim`). If the source Dockerfile uses Alpine/Wolfi/UBI/etc., keep the original package-manager commands in `extra_instructions.runtime.after_os_update` instead of using `system_packages`.
+
+For Python package managers, the mold emits `ENV PYTHONDONTWRITEBYTECODE=1` and `ENV PYTHONUNBUFFERED=1` automatically. Do not put those generated defaults in `env` unless the original Dockerfile deliberately overrides them with different values.
 
 ### Hook points (`extra_instructions`)
 
@@ -138,7 +143,8 @@ the Dockerfile's signals, and add a top-of-file YAML comment:
    - `ENTRYPOINT` → `entrypoint`
    - `HEALTHCHECK` → `healthcheck` (parse `--interval`, `--timeout`, `--start-period`, `--retries`)
    - `USER` (when preceded by `groupadd`/`useradd`) → `user`
-   - `apt-get install` → `system_packages`
+   - `apt-get install` → `system_packages` (APT-based base images only)
+   - `RUN install -d -o <user> -g <user> -m 0750 ...` or equivalent app-owned runtime directories → `writable_dirs`
    - `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` → `pipefail: true`
 
 5. **Detect install method**:
@@ -192,12 +198,15 @@ the Dockerfile's signals, and add a top-of-file YAML comment:
     - Do not invent hooks or fields that don't exist. Never silently omit critical behavior.
 
 11. **Ignore generated patterns** — skip instructions that the mold generates automatically:
-    - `RUN groupadd ... && useradd ...` (generated from `user`)
+    - `RUN mkdir -p /tmp ... && groupadd ... && useradd ...` (generated from `user`)
+    - `RUN chown <user>:<user> <workdir>` (generated from `user`)
+    - `RUN install -d -o <user> -g <user> -m 0750 ...` (generated from `writable_dirs`)
     - `WORKDIR /app` (default)
     - `COPY pyproject.toml ...`, `COPY requirements*.txt ...`, `COPY package.json ...` (generated from `package_manager`)
     - `RUN poetry config virtualenvs...` (generated)
     - `RUN uv sync ...` (generated)
     - `ENV PATH=".../\.venv/bin:$PATH"` in multistage runtime (generated)
+    - `ENV PYTHONDONTWRITEBYTECODE=1` and `ENV PYTHONUNBUFFERED=1` for Python (generated)
 
 ## Best practice review
 
@@ -206,6 +215,7 @@ After producing the descriptor, check whether the following mold features are ab
 | Absent from original | Suggestion |
 | :--- | :--- |
 | No non-root `USER` | `user: appname` — the mold creates the group and user automatically |
+| App writes to `/app/data`, `/app/cache`, etc. | `writable_dirs: [...]` — creates app-owned runtime directories without changing dependency ownership |
 | No `HEALTHCHECK` | `healthcheck:` — available if the service exposes a health endpoint |
 | `RUN` pipes without `set -o pipefail` | `pipefail: true` — makes the build fail on silent pipe errors |
 
@@ -214,6 +224,7 @@ Present suggestions after the descriptor, in a clearly labelled block:
 ```
 # Suggested improvements (optional — the mold supports these natively):
 # - user: app         → runs as non-root; group and useradd generated automatically
+# - writable_dirs: [/app/data] → create app-owned runtime write locations
 # - healthcheck: ...  → add if your service exposes a /health endpoint
 # - pipefail: true    → recommended when RUN uses pipes
 ```

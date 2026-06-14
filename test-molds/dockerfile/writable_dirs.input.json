@@ -1,0 +1,6 @@
+{
+  "package_manager": "uv",
+  "user": "app",
+  "writable_dirs": ["/app/data", "/app/cache"],
+  "cmd": ["python", "-m", "app"]
+}
