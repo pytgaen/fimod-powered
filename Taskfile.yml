@@ -28,7 +28,7 @@ tasks:
     cmds:
       - |
         set -e
-        for mold in dockerfile download gh_latest html_report poetry_migrate skylos_to_gitlab; do
+        for mold in dockerfile download gh_latest html_report poetry_migrate semver_bumper skylos_to_gitlab; do
           echo ""
           echo "── $mold ──"
           fimod mold test "molds/$mold/$mold.py" "test-molds/$mold"

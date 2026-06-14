@@ -1,0 +1,7 @@
+{
+  "current": "0.5.0",
+  "commits": [
+    {"subject": "docs: refresh README"},
+    {"subject": "chore: update pre-commit hooks"}
+  ]
+}

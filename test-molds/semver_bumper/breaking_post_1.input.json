@@ -1,0 +1,9 @@
+{
+  "current": "1.2.3",
+  "commits": [
+    {
+      "subject": "refactor(api): simplify config",
+      "body": "BREAKING CHANGE: remove legacy option"
+    }
+  ]
+}

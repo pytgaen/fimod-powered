@@ -6,6 +6,9 @@ LABEL org.opencontainers.image.version="1.0.0"
 ARG GIT_SHA
 ARG BUILD_DATE
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
 COPY requirements*.txt ./

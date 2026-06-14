@@ -1,0 +1,15 @@
+{
+  "current": "0.5.0",
+  "current_tag": "0.5.0",
+  "next": "0.5.0",
+  "next_tag": "0.5.0",
+  "bump": "none",
+  "reasons": [],
+  "counts": {
+    "major": 0,
+    "minor": 0,
+    "patch": 0,
+    "none": 2
+  },
+  "commit_count": 2
+}

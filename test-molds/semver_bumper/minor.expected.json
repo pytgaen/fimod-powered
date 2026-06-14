@@ -1,0 +1,18 @@
+{
+  "current": "0.5.0",
+  "current_tag": "0.5.0",
+  "next": "0.6.0",
+  "next_tag": "0.6.0",
+  "bump": "minor",
+  "reasons": [
+    "fix(poetry_migrate): preserve URL dependencies",
+    "feat(dockerfile): add shell hooks"
+  ],
+  "counts": {
+    "major": 0,
+    "minor": 1,
+    "patch": 1,
+    "none": 1
+  },
+  "commit_count": 3
+}

@@ -1,0 +1,6 @@
+{
+  "current": "v0.5.0",
+  "commits": [
+    {"subject": "feat!: restructure Dockerfile hooks"}
+  ]
+}

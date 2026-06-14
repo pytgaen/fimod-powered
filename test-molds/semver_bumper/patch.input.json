@@ -1,0 +1,7 @@
+{
+  "current": "v0.5.0",
+  "commits": [
+    {"subject": "docs: refresh README"},
+    {"subject": "fix(poetry_migrate): preserve URL dependencies"}
+  ]
+}

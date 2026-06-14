@@ -1,0 +1,1 @@
+abc123refactor(api): simplify configBREAKING CHANGE: remove legacy option

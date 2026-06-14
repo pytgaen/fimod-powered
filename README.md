@@ -13,6 +13,7 @@ No system Python required: fimod embeds its own runtime ([Monty](https://github.
 | [`poetry_migrate`](molds/poetry_migrate/) | Migrate Poetry `pyproject.toml` to Poetry 2 or uv (PEP 621) |
 | [`download`](molds/download/) | Download files from URLs (wget-like) |
 | [`gh_latest`](molds/gh_latest/) | Get latest GitHub release tag or download URL |
+| [`semver_bumper`](molds/semver_bumper/) | Calculate the next semantic version from commits since the last tag |
 | [`skylos_to_gitlab`](molds/skylos_to_gitlab/) | Convert Skylos dead code reports to GitLab Code Quality format |
 
 ## Quick start

@@ -32,6 +32,7 @@ MOLD_ICONS = {
     "gh_latest": ":material-tag-arrow-down:",
     "html_report": ":material-table:",
     "poetry_migrate": ":material-swap-horizontal:",
+    "semver_bumper": ":material-source-branch:",
     "skylos_to_gitlab": ":material-code-json:",
 }
 

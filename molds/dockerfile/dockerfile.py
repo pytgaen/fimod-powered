@@ -102,6 +102,18 @@ def transform(data, args, **_):
     data["poetry_install"] = data.get("poetry_install", "curl")
     data["pipefail"] = data.get("pipefail", False)
     data["skip_copy_all"] = data.get("skip_copy_all", False)
+    data["writable_dirs"] = data.get("writable_dirs") or []
+
+    if not isinstance(data["writable_dirs"], list):
+        gk_fail("writable_dirs must be a list of paths")
+        return ""
+    if data["writable_dirs"] and not data.get("user"):
+        gk_fail("writable_dirs requires 'user' so directories can be owned by the runtime user")
+        return ""
+    invalid_writable_dirs = [p for p in data["writable_dirs"] if not isinstance(p, str) or not p]
+    if invalid_writable_dirs:
+        gk_fail(f"writable_dirs entries must be non-empty strings, got: {invalid_writable_dirs!r}")
+        return ""
 
     extra = data.get("extra_instructions") or {}
     if not isinstance(extra, dict):
