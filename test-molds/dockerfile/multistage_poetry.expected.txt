@@ -7,9 +7,11 @@ RUN curl -sSL https://install.python-poetry.org | python -
 ENV PATH="/root/.local/bin:$PATH"
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.in-project true \
- && poetry install --only main --no-interaction --no-ansi
+ && poetry install --only main --no-root --no-interaction --no-ansi
 
 COPY . .
+
+RUN poetry install --only-root --no-interaction --no-ansi
 
 # ── Runtime stage ────────────────────────────────────────────────
 FROM python:3.12-slim

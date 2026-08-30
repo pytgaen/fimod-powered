@@ -1,0 +1,6 @@
+{
+  "package_manager": "uv",
+  "multistage": true,
+  "skip_builder_copy_all": true,
+  "cmd": ["python", "-m", "app"]
+}

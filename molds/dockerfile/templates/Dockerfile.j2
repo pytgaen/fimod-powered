@@ -58,10 +58,12 @@ WORKDIR {{ workdir }}
 {% endif %}
 COPY {{ manifest_files | join(' ') }} ./
 RUN uv sync --frozen --no-dev --no-install-project
+{% if not skip_builder_copy_all %}
 
 COPY . .
 
 RUN uv sync --frozen --no-dev
+{% endif %}
 {% elif package_manager == "poetry" %}
 {{ install_poetry(poetry_version, poetry_install) }}
 {% if builder_hooks.before_install_deps %}
@@ -71,9 +73,13 @@ RUN uv sync --frozen --no-dev
 {% endif %}
 COPY {{ manifest_files | join(' ') }} ./
 RUN poetry config virtualenvs.in-project true \
- && poetry install --only main --no-interaction --no-ansi
+ && poetry install --only main --no-root --no-interaction --no-ansi
+{% if not skip_builder_copy_all %}
 
 COPY . .
+
+RUN poetry install --only-root --no-interaction --no-ansi
+{% endif %}
 {% elif package_manager == "pip" %}
 
 RUN python -m venv .venv
