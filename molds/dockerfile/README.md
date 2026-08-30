@@ -37,6 +37,7 @@ Only `cmd` (or `entrypoint`) is required. Everything else has sensible defaults.
 | `poetry_version` | string | — | Poetry version to pin |
 | `poetry_install` | string | `curl` | Poetry install method: `curl`, `pipx`, `pip` |
 | `pipefail` | bool | `false` | Add `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` |
+| `skip_builder_copy_all` | bool | `false` | Omit the builder `COPY . .` and install only dependencies (multistage uv/Poetry) |
 | `skip_copy_all` | bool | `false` | Omit the runtime `COPY . .`. Use when you want fully selective copies via `runtime.finalize` + `.dockerignore` |
 | `extra_instructions` | object | — | Custom instructions at hook points, split by stage (see below) |
 
@@ -67,7 +68,7 @@ extra_instructions:
       - 'ENV POETRY_HTTP_BASIC_PRIVATE_USERNAME="${PYPI_USERNAME}"'
     before_install_deps:    # pkgmgr installed, before `poetry install` / `uv sync`
       - "RUN poetry config http-basic.private $PYPI_USERNAME $PYPI_PASSWORD"
-    finalize:               # end of builder, after deps install + COPY . .
+    finalize:               # end of builder, after optional source copy/project install
       - "RUN poetry run python -m app.precompile"
 
   runtime:
@@ -104,6 +105,10 @@ The prompt guides the LLM to map standard Dockerfile patterns to descriptor fiel
 The template is optimized for Docker layer caching: dependency manifest files are copied and installed **before** the source code. This means `docker build` only re-installs dependencies when `requirements.txt`, `pyproject.toml`, `package.json`, etc. actually change.
 
 With `multistage: true`, the builder stage installs everything, then only the virtualenv (`.venv`) or `node_modules` is copied into the final image — no build tools, no cache, no package manager in production.
+
+For uv and Poetry, set `skip_builder_copy_all: true` when the builder only needs third-party dependencies and the application runs from sources copied into the runtime stage. This omits the builder `COPY . .` and the project installation. Keep the default when console scripts, packaged metadata, local project installation, or `builder.finalize` hooks require the source tree.
+
+`skip_builder_copy_all` and `skip_copy_all` are independent: the former controls the multistage builder, while the latter controls the runtime image.
 
 ## Install methods
 

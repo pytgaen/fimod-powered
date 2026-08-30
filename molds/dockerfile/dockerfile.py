@@ -101,6 +101,7 @@ def transform(data, args, **_):
     data["poetry_version"] = data.get("poetry_version")
     data["poetry_install"] = data.get("poetry_install", "curl")
     data["pipefail"] = data.get("pipefail", False)
+    data["skip_builder_copy_all"] = data.get("skip_builder_copy_all", False)
     data["skip_copy_all"] = data.get("skip_copy_all", False)
     data["writable_dirs"] = data.get("writable_dirs") or []
 

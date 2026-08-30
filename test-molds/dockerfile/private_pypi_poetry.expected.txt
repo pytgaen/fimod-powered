@@ -15,9 +15,11 @@ ENV PATH="/root/.local/bin:$PATH"
 RUN poetry config http-basic.private "${PYPI_USERNAME}" "${PYPI_PASSWORD}"
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.in-project true \
- && poetry install --only main --no-interaction --no-ansi
+ && poetry install --only main --no-root --no-interaction --no-ansi
 
 COPY . .
+
+RUN poetry install --only-root --no-interaction --no-ansi
 
 RUN poetry run python -c "import app; app.precompile()"
 

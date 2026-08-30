@@ -3,7 +3,7 @@ description = "Generate a production-ready Dockerfile from a JSON/YAML descripto
 path = "dockerfile/dockerfile.py"
 readme = "dockerfile/README.md"
 output_format = "txt"
-hash = "b7752c8a56e70e0ced044d85cf9388cb"
+hash = "980f63062c8c4ae5971ae8ea857fe6b0"
 files = [
     "dockerfile/CONVERT_PROMPT.md",
     "dockerfile/templates/Dockerfile.j2",

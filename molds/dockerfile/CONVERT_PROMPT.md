@@ -29,6 +29,7 @@ Analyze the provided Dockerfile and produce a YAML descriptor that will regenera
 | `poetry_version` | string | — | Poetry version to pin |
 | `poetry_install` | string | `curl` | `curl` (official installer), `pipx`, `pip` |
 | `pipefail` | bool | `false` | Add `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` |
+| `skip_builder_copy_all` | bool | `false` | Omit the builder `COPY . .` and install only dependencies (multistage uv/Poetry) |
 | `skip_copy_all` | bool | `false` | Omit the runtime `COPY . .`. Set to `true` when the original Dockerfile performs selective copies only |
 | `builder_build_args` | list | — | Build-time ARG declarations for the **builder** stage (e.g. private-registry credentials) |
 | `extra_instructions` | object | — | Custom instructions injected at hook points (see below) |
@@ -45,7 +46,7 @@ For anything the mold doesn't handle natively, use `extra_instructions`. The blo
 
 - **`before_install_pkgmgr`** — start of the builder, right after `WORKDIR`, **before** the package manager tooling is installed (before `pip install poetry` / `curl uv` / `corepack enable`). Use for: `ENV` auth for private registries (`POETRY_HTTP_BASIC_*`, `NPM_TOKEN`, `PIP_INDEX_URL`), custom CA certs, proxy config — anything independent of the pm itself. ARG declarations go in `builder_build_args` (dedicated field), not here.
 - **`before_install_deps`** — after pm tooling is installed, **before** `COPY <deps>` and `RUN <install deps>`. Use for: commands that need the pm binary (`RUN poetry config ...`, `RUN npm config set ...`, `RUN uv cache ...`).
-- **`finalize`** — end of the builder, after dependency install and `COPY . .`. Use for: pre-compilation, ML model downloads, asset bundling whose output is part of the built venv / source tree copied over.
+- **`finalize`** — end of the builder, after dependency installation and the optional source copy/project installation. With `skip_builder_copy_all: true`, the source tree is unavailable here. Use for: pre-compilation, ML model downloads, asset bundling whose output is part of the built venv / source tree copied over.
 
 **Runtime stage hooks** (`extra_instructions.runtime.*`):
 
@@ -122,6 +123,34 @@ the Dockerfile's signals, and add a top-of-file YAML comment:
 # verify package_manager matches the actual project state.
 ```
 
+## Pre-conversion check: `.dockerignore`
+
+When the project files are available, identify the build-context root and read
+its `.dockerignore` before producing the descriptor. If a Dockerfile-specific
+ignore file exists next to the Dockerfile (for example
+`build.Dockerfile.dockerignore`), validate that file instead because it takes
+precedence over the context-root `.dockerignore`. Validate the effective rules
+against the Dockerfile that the descriptor will generate:
+
+1. Every manifest, lockfile, source tree, configuration file, and asset used by
+   a generated or preserved `COPY` must remain included. If an ignore rule hides
+   a required path, tell the user before producing the descriptor; do not
+   silently generate a Dockerfile that cannot build.
+2. If either builder or runtime keeps a generic `COPY . .`, check that common
+   local and sensitive content is excluded: `.git`, virtual environments,
+   Python/Node caches, test/tool caches, local coverage output, and `.env` files
+   (while preserving safe samples such as `.env.example`).
+3. Do not blindly ignore `README`, `LICENSE`, migrations, templates, static
+   assets, generated code, or distribution directories: build backends and the
+   application may require them. Cross-reference the manifest and existing
+   Dockerfile first.
+4. If `.dockerignore` is missing or insufficient, append a separate, minimal
+   stack-aware proposal after the descriptor. Label it clearly as a file to
+   create/update; never place `.dockerignore` patterns inside the YAML descriptor.
+5. If only the Dockerfile was provided, state that `.dockerignore` could not be
+   validated and propose a minimal baseline whenever a generic `COPY . .`
+   remains.
+
 ## Conversion rules
 
 1. **Identify the package manager** from the manifest (see *Pre-conversion check*). Use Dockerfile signals only as fallback when no manifest is available:
@@ -168,10 +197,11 @@ the Dockerfile's signals, and add a top-of-file YAML comment:
    - Between dependency install and `COPY . .` → `after_deps_install`
    - After `COPY . .` and before `EXPOSE`/`CMD` → `finalize`
 
-7. **Selective vs generic source copy** — by default the mold emits `COPY . .` in the runtime stage. If the original Dockerfile performs **explicit, selective** `COPY dir/` instructions and has **no** generic `COPY . .`, this is an intentional pattern (often to avoid shipping tests/docs/secrets).
-   - Set `skip_copy_all: true`.
-   - Put every selective copy into `extra_instructions.runtime.finalize` using the `{cp: {src: dest}}` form, preserving original paths.
-   - Recommend to the user (as a YAML comment at the top of the descriptor) to add a `.dockerignore` matching the original intent — this is the idiomatic Docker way to constrain what ends up in the build context, and is more maintainable than enumerating every copy.
+7. **Selective vs generic source copy** — treat builder and runtime copies independently:
+   - For multistage uv/Poetry builds, set `skip_builder_copy_all: true` when the original builder installs only third-party dependencies and does not need the source tree. Keep the default when it installs the root project, exposes project console scripts, uses local packages, or runs builder hooks against the sources.
+   - Set `skip_copy_all: true` when the original runtime performs **explicit, selective** `COPY dir/` instructions and has no generic `COPY . .`.
+   - Put every selective runtime copy into `extra_instructions.runtime.finalize` using the `{cp: {src: dest}}` form, preserving original paths.
+   - Validate or propose `.dockerignore` using the dedicated pre-conversion check above. Selective copies reduce what reaches each layer, but do not replace validation of the build context.
 
 8. **Normalize equivalent install patterns** — the mold only emits **2 stages** (`builder` + runtime). Dockerfiles using 3+ stages or non-standard install pipelines are almost always reducible to the canonical 2-stage build. **Normalize aggressively rather than trying to preserve structure.**
 
@@ -218,6 +248,7 @@ After producing the descriptor, check whether the following mold features are ab
 | App writes to `/app/data`, `/app/cache`, etc. | `writable_dirs: [...]` — creates app-owned runtime directories without changing dependency ownership |
 | No `HEALTHCHECK` | `healthcheck:` — available if the service exposes a health endpoint |
 | `RUN` pipes without `set -o pipefail` | `pipefail: true` — makes the build fail on silent pipe errors |
+| Generic `COPY . .` with no usable `.dockerignore` | Create/update `.dockerignore` using the validated, stack-aware proposal |
 
 Present suggestions after the descriptor, in a clearly labelled block:
 
@@ -228,6 +259,28 @@ Present suggestions after the descriptor, in a clearly labelled block:
 # - healthcheck: ...  → add if your service exposes a /health endpoint
 # - pipefail: true    → recommended when RUN uses pipes
 ```
+
+When `.dockerignore` needs attention, append a separate block after these
+suggestions. Include only patterns justified by the inspected project, for
+example:
+
+````markdown
+Suggested `.dockerignore` (create or update separately):
+
+```dockerignore
+.git
+.venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+.env
+.env.*
+!.env.example
+```
+````
 
 ## Examples
 
@@ -390,4 +443,4 @@ Note how the `poetry export` + `pip wheel` + `pip install --no-index` pipeline f
 
 Return the YAML descriptor inside a fenced code block. Add a brief comment for any `extra_instructions` entry explaining what the original instruction did. If rule 8 normalization dropped an intermediate stage, or rule 10 flagged a hard limit, add a top-of-file comment summarizing what was normalized away or approximated.
 
-After the descriptor, append the best practice suggestions block if any apply (see *Best practice review* above). The descriptor itself must stay faithful to the original Dockerfile — never inject suggested fields silently.
+After the descriptor, append the best practice suggestions block if any apply (see *Best practice review* above), followed by a separate `.dockerignore` proposal when its pre-conversion check requires one. The descriptor itself must stay faithful to the original Dockerfile — never inject suggested fields silently.
