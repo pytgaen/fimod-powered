@@ -12,6 +12,9 @@ Usage:
 # fimod: arg=index_strategy "uv index-strategy: first-index (default), unsafe-best-match, unsafe-first-match"
 
 
+import re
+
+
 def parse_people(items):
     """Parse ["Name <email>"] into [{"name": "Name", "email": "email"}]"""
     people = []
@@ -88,7 +91,7 @@ def convert_constraint(constraint):
 
 def simplify_python_constraint(s):
     """Trim trailing .0 in version tuples: >=3.9.0,<4.0.0 -> >=3.9,<4.0."""
-    return re_sub(r"(\d+\.\d+)\.0(?=\D|$)", r"\1", s)
+    return re.sub(r"(\d+\.\d+)\.0(?=\D|$)", r"\g<1>", s)
 
 
 def _split_operator(s):

@@ -119,5 +119,5 @@ uv run python -c "import my_package"
 
 This mold only rewrites `pyproject.toml`. A complete Poetry → uv migration often
 involves more: converting to src-layout, patching the `Dockerfile`, and updating
-CI. See [`MIGRATE_FULL_PROMPT.md`](./MIGRATE_FULL_PROMPT.md) — a workflow prompt
+CI. See [`MIGRATE_FULL_PROMPT.md`](https://github.com/pytgaen/fimod-powered/blob/main/molds/poetry_migrate/MIGRATE_FULL_PROMPT.md) — a workflow prompt
 you can feed to an LLM agent to drive the full migration end-to-end.
