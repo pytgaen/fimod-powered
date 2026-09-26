@@ -29,10 +29,10 @@ Every mold **must** include tests and a `README.md` — pull requests without th
 
 ```bash
 # Test your mold
-fimod mold test ./test-molds/my_mold
+fimod mold test molds/my_mold/my_mold.py test-molds/my_mold
 
-# Test everything
-fimod mold test ./test-molds
+# Test all fixture cases
+task test:all
 ```
 
 Then open a pull request on [GitHub](https://github.com/pytgaen/fimod-powered).

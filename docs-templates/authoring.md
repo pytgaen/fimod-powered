@@ -39,3 +39,5 @@ A typical README includes:
 - The module docstring (`"""..."""`) is shown by `fimod mold list` — keep it to one line
 - Use `msg_warn()` for non-fatal issues, `gk_fail()` for validation failures
 - Prefer `def transform(data, args, **_):` — only declare `env`/`headers` if you use them
+- Use `import re` for regular expressions; read captures through `Match.group()` / `Match.groups()` and use explicit replacement references such as `r"\g<1>"`
+- New molds must run without `FIMOD_LEGACY_BUILTINS`. The deprecated `re_*`, `it_unique`, `it_unique_by`, and `it_flatten` helpers require `FIMOD_LEGACY_BUILTINS=1`; see the [migration details](https://pytgaen.github.io/fimod/reference/built-ins/) before replacing deduplication or recursive flattening

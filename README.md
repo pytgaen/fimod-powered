@@ -18,9 +18,11 @@ No system Python required: fimod embeds its own runtime ([Monty](https://github.
 
 ## Quick start
 
-### Install fimod (>= 0.3.0)
+### Install fimod
 
 See the [fimod installation guide](https://github.com/pytgaen/fimod#installation).
+
+`poetry_migrate` requires a Fimod build with native `import re` support. All molds run without `FIMOD_LEGACY_BUILTINS`; none uses the deprecated `re_*`, `it_unique`, `it_unique_by`, or `it_flatten` helpers.
 
 ### Use a mold
 
@@ -71,14 +73,18 @@ fimod s -i input.yaml -m @dockerfile -o Dockerfile
 
 ## Testing
 
-Each mold has fixture-based tests in `test-molds/`.
+Tests live in `test-molds/`. Five molds use fixture tests; `download` and `gh_latest` use local HTTP server tests.
 
 ```bash
-# Run all mold tests
-fimod mold test ./test-molds
+# Run all fixture tests
+task test:all
 
 # Run tests for a single mold
-fimod mold test ./test-molds/dockerfile
+fimod mold test molds/dockerfile/dockerfile.py test-molds/dockerfile
+
+# Run the HTTP mold tests (requires uv)
+bash test-molds/download/test_e2e.sh
+bash test-molds/gh_latest/test_e2e.sh
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on the test fixture format.

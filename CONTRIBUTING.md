@@ -6,7 +6,7 @@
 
 ```
 molds/my_mold/
-├── my_mold.py             # Must export transform(data, args, env, headers)
+├── my_mold.py             # Must export transform(data, args, env, headers, **_)
 ├── templates/             # Jinja2 templates (optional)
 │   └── template.j2
 └── README.md              # Usage, input format, examples
@@ -19,6 +19,7 @@ The mold filename must match the directory name.
 - **Docstring**: The module-level docstring (`"""..."""`) is the description shown by `fimod mold list`.
 - **Directives**: Declare output format, input format, and arguments with `# fimod:` comments at the top of the file.
 - **Error handling**: Use `msg_warn()` for non-fatal issues, `gk_fail()` for validation failures.
+- **Native Python**: Use `import re` for regex. New molds must run without `FIMOD_LEGACY_BUILTINS`; do not use the deprecated `re_*`, `it_unique`, `it_unique_by`, or `it_flatten` helpers.
 
 ```python
 """
@@ -30,7 +31,7 @@ Usage:
 # fimod: output-format=json
 # fimod: arg=foo  Description of the foo argument
 
-def transform(data, args, env, headers):
+def transform(data, args, env, headers, **_):
     # ...
     return result
 ```
@@ -74,10 +75,10 @@ Commit the updated `molds/catalog.toml` along with your changes. CI will verify 
 
 ```bash
 # Test your mold
-fimod mold test ./test-molds/my_mold
+fimod mold test molds/my_mold/my_mold.py test-molds/my_mold
 
-# Test everything
-fimod mold test ./test-molds
+# Test all fixture cases
+task test:all
 ```
 
 ## Pre-commit hooks
